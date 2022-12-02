@@ -27,6 +27,29 @@ def score(opp, you):
         if you == 1: # loses to paper
             return 6
 
+
+def strat(opp, strategy):
+    # 1: you need to lose
+    # 2: you need draw
+    # 3: you need to win
+    if strategy == 2:
+        return (opp, opp)
+    if strategy == 1:
+        if opp == 1:
+            return (opp, 3)
+        if opp == 2:
+            return (opp, 1)
+        if opp == 3:
+            return (opp, 2)
+    if strategy == 3:
+        if opp == 1:
+            return (opp, 2)
+        if opp == 2:
+            return (opp, 3)
+        if opp == 3:
+            return (opp, 1)
+    
+
 def day02(filename):
     print()
     print(filename)
@@ -36,7 +59,7 @@ def day02(filename):
         for line in puzzlein:
             opp, you = line.split()
             play = 1 + ord(opp) - ord('A'), 1 + ord(you) - ord('X')
-            plays.append(play)
+            plays.append(strat(*play))
             print(play)
 
         print(plays)
