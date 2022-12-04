@@ -3,52 +3,31 @@
 from utils import inputs, examples
 
 
-def score(opp, you):
-    # Rock
-    # Paper
-    # Scissors
-
-    if opp == you:
+def match_score(opp, you):
+    # Loss = 0, Win = 6, draw = 3
+    diff = (opp - you) % 3
+    if diff == 0:
         return 3
-    if opp == 1:   # Opp rock
-        if you == 3: # YOu scissors, lose
-            return 0
-        if you == 2: # Paper win
-            return 6
-    if opp == 2: # Opp paper
-        if you == 3: # You scicorrs
-            return 6
-        if you == 1: # YOu rock
-            return 0
-
-    if opp == 3: #Scirros
-        if you == 2: #  beats paper
-            return 0
-        if you == 1: # loses to paper
-            return 6
+    elif diff == 2:
+        return 6
+    elif diff == 1:
+        return 0
 
 
-def strat(opp, strategy):
-    # 1: you need to lose
-    # 2: you need draw
-    # 3: you need to win
-    if strategy == 2:
-        return (opp, opp)
+def score(play):
+    opp, you = play
+    return 1 + you + match_score(opp, you)
+
+
+def strategy(opp, strategy):
+    # (0, 1, 2) = (lose, draw, win)
     if strategy == 1:
-        if opp == 1:
-            return (opp, 3)
-        if opp == 2:
-            return (opp, 1)
-        if opp == 3:
-            return (opp, 2)
-    if strategy == 3:
-        if opp == 1:
-            return (opp, 2)
-        if opp == 2:
-            return (opp, 3)
-        if opp == 3:
-            return (opp, 1)
-    
+        return (opp, opp)
+    elif strategy == 0:
+        return (opp, (opp + 2) % 3)
+    elif strategy == 2:
+        return (opp, (opp + 1) % 3)
+
 
 def day02(filename):
     print()
@@ -58,17 +37,17 @@ def day02(filename):
         plays = []
         for line in puzzlein:
             opp, you = line.split()
-            play = 1 + ord(opp) - ord('A'), 1 + ord(you) - ord('X')
-            plays.append(strat(*play))
-            print(play)
+            play = ord(opp) - ord("A"), ord(you) - ord("X")
+            plays.append(play)
 
-        print(plays)
-        total = 0
+        part1 = 0
+        part2 = 0
         for play in plays:
-            total += play[1] + score(*play)
+            part1 += score(play)
+            part2 += score(strategy(*play))
 
-        print("part1", total)
-    #print("part2", sum(sorted(elves)[-3:]))
+        print("part1:", part1)
+        print("part2:", part2)
 
 
 day02(inputs("02"))
