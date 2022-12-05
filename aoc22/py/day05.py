@@ -2,8 +2,11 @@
 
 from utils import inputs, examples
 
+import copy
+from pprint import pprint
 
-def day04(filename):
+
+def day05(filename):
     print()
     print(filename)
 
@@ -38,26 +41,28 @@ def day04(filename):
                 9: list(reversed("J T G C F L H".split())),
             }
 
-        import pprint
-        pprint.pprint(stacks)
+
+        part1 = copy.deepcopy(stacks)
+        part2 = copy.deepcopy(stacks)
 
         for instr in instructions:
             amount, source, dest = instr
+            temp = []
             for i in range(amount):
-                stacks[dest].append(stacks[source].pop())
+                temp.append(part2[source].pop())
+                part1[dest].append(part1[source].pop())
 
-
-        print(stacks)
-        for stack in range(1, 10):
-            print(stacks[stack][-1])
-
+            part2[dest].extend(reversed(temp))
+            pprint(part1)
+            pprint(part2)
 
         print(instructions)
+        pprint(part1)
+        pprint(part2)
+
+        print("part1:", "".join(part1[i][-1] for i in range(1, 1 + len(stacks))))
+        print("part1:", "".join(part2[i][-1] for i in range(1, 1 + len(stacks))))
 
 
-        print("part1:", part1)
-        print("part1:", part2)
-
-
-day04(inputs("05"))
-day04(examples("05"))
+day05(inputs("05"))
+day05(examples("05"))
