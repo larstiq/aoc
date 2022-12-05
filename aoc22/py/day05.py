@@ -5,6 +5,9 @@ from utils import inputs, examples
 import copy
 from pprint import pprint
 
+from collections import defaultdict
+import string
+
 
 def day05(filename):
     print()
@@ -12,35 +15,17 @@ def day05(filename):
 
     with open(filename) as puzzlein:
 
-        part1 = 0
-        part2 = 0
+        stacks = defaultdict(list)
+        instructions = []
         for line in puzzlein:
-            instructions =[]
-            for line in puzzlein:
-                if line.startswith("move"):
-                    parts = line.split(" ")
-                    instructions.append(tuple(map(int, (parts[1], parts[3], parts[5]))))
-
-        print(str(filename))
-        if "examples" in str(filename):
-            stacks = {
-                1: ['Z', 'N'],
-                2: ['M', 'C', 'D'],
-                3: ['P']
-            }
-        else:
-            stacks = {
-                1: list(reversed(list("VQWMBNZC"))),
-                2: list(reversed(list("BCWRZH"))),
-                3: list(reversed(list("JRQF"))),
-                4: list(reversed("T M N F H W S Z".split(" "))),
-                5: list(reversed("P Q N L W F G".split())),
-                6: list(reversed("W P L".split())),
-                7: list(reversed("J Q C G R D B V".split())),
-                8: list(reversed("W B N Q Z".split())),
-                9: list(reversed("J T G C F L H".split())),
-            }
-
+            if line.startswith("move"):
+                parts = line.split(" ")
+                instructions.append(tuple(map(int, (parts[1], parts[3], parts[5]))))
+            else:
+                for ix, crate in enumerate(range(1, len(line), 4)):
+                    crate = line[crate]
+                    if crate in string.ascii_uppercase:
+                        stacks[1 + ix].insert(0, crate)
 
         part1 = copy.deepcopy(stacks)
         part2 = copy.deepcopy(stacks)
