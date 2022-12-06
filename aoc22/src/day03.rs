@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use hashbag::HashBag;
+use itertools::Itertools;
 use std::collections::HashSet;
 
 #[allow(unused_imports)]
@@ -31,8 +33,26 @@ fn part1(input: &str) -> u32 {
         .sum()
 }
 
-fn part2(input: &str) -> i32 {
-    0
+fn part2(input: &str) -> u32 {
+    let mut total = 0;
+    for (elf1, elf2, elf3) in input.lines().tuples() {
+        // Whyyyy does HashSet<char> BitAnd require Eq (which is not on
+        // char) and .intersection only does two sets at a time!? Argh!
+        //
+        // HashSet::from_iter(elf1.chars()).intersection(&HashSet::from_iter(elf2.chars())).intersection(HashSet::from_iter(elf3.chars()));
+        // HashSet::from_iter(elf1.chars()) | HashSet::from_iter(elf2.chars())
+        let mut bag = HashBag::new();
+        bag.extend(elf1.chars().unique());
+        bag.extend(elf2.chars().unique());
+        bag.extend(elf3.chars().unique());
+        bag.retain(|_, count| (count == 3) as usize);
+        total += bag
+            .drain()
+            .last()
+            .map(|(badge, _count)| priority(&badge))
+            .unwrap();
+    }
+    total
 }
 
 fn input() -> String {
