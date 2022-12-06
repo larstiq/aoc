@@ -18,12 +18,11 @@ def sliding_window(iterable, n):
         yield tuple(window)
 
 
-def decode(line):
-    for win in sliding_window(line, 4):
-        if len(set(win)) == 4:
-            pos = line.index("".join(win))
-            print(pos, line[pos:pos + 4], win)
-            return 4 + pos
+def decode(line, size):
+    for win in sliding_window(line, size):
+        if len(set(win)) == size:
+            return size + line.index("".join(win))
+
 
 
 def day06(filename):
@@ -33,8 +32,8 @@ def day06(filename):
     with open(filename) as puzzlein:
 
         for line in puzzlein:
-            print(decode(line.strip()))
-
+            print("part1", decode(line.strip(), 4))
+            print("part2", decode(line.strip(), 14))
 
 day06(inputs("06"))
 day06(examples("06"))
