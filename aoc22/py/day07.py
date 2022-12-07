@@ -48,6 +48,18 @@ def day07(filename):
         part1 = sum(v for (k, v) in dir_sizes.items() if v <= 100000)
         print("part1:", part1)
 
+        disk_total = 70000000
+        required = 30000000
+
+        root_size = dir_sizes[Path("/")]
+        missing = required - (disk_total - root_size)
+        print("missing:", missing)
+
+        gains = [(v, str(k)) for (k, v) in dir_sizes.items() if v >= missing]
+        print(sorted(gains))
+        part2 = sorted(gains)[0][0]
+        print("part2:", part2)
+
 
 day07(inputs("07"))
 day07(examples("07"))
