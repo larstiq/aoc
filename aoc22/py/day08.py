@@ -25,6 +25,10 @@ def day08(filename):
         visible_trees = set()
         found = data.copy()
 
+
+
+
+        # Can avoid the edges since they count anyway
         for rowix in range(data.shape[0]):
             for colix in range(data.shape[0]):
                 #print(rowix, colix)
@@ -33,6 +37,14 @@ def day08(filename):
                 from_right = data.loc[rowix][colix+1:]
                 from_top = data[colix][:rowix]
                 from_bottom = data[colix][rowix+1:]
+                #breakpoint()
+                assert len(from_left) + len(from_right) == data.shape[0] - 1
+                assert len(from_top) + len(from_bottom) == data.shape[0] - 1
+
+                if not (list(from_left) + [tree] + list(from_right) == list(data.loc[rowix])
+                        and list(from_top) + [tree] + list(from_bottom) == list(data[colix])):
+                    breakpoint()
+                #assert from_left
                 #print(from_left)
                 #print(from_right)
                 #print(from_top)
@@ -49,9 +61,10 @@ def day08(filename):
                         found.loc[(rowix, colix)] = -100
 
         print(found)
+        breakpoint()
 
         print("visible trees:", visible_trees)
         print("len vis:", len(visible_trees))
 
-day08(inputs("08"))
+day08(inputs("10"))
 day08(examples("08"))
