@@ -51,5 +51,5 @@ def day08(filename):
         print("part1 visible trees from outside:", len(visible_trees))
         print("part2 max scenic view:", max_scenic)
 
-day08(inputs("10"))
+day08(inputs("08"))
 day08(examples("08"))
