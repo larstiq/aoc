@@ -28,16 +28,50 @@ def day08(filename):
 
 
 
+
+        max_scenic = 0
+
+        print(data)
         # Can avoid the edges since they count anyway
+        # TODO: combine both by being visible from a high vantage point
         for rowix in range(data.shape[0]):
             for colix in range(data.shape[0]):
-                #print(rowix, colix)
                 tree = data.loc[rowix][colix]
                 from_left = data.loc[rowix][:colix]
                 from_right = data.loc[rowix][colix+1:]
                 from_top = data[colix][:rowix]
                 from_bottom = data[colix][rowix+1:]
-                #breakpoint()
+                print((rowix, colix), tree)
+
+
+
+                max_left = -1
+                left_scenic = 0
+                right_scenic = 0
+                top_scenic = 0
+                bottom_scenic = 0
+                for t in reversed(from_left):
+                    left_scenic += 1 
+                    if t >= tree:
+                        break
+                for t in from_right:
+                    right_scenic += 1 
+                    if t >= tree:
+                        break
+                for t in reversed(from_top):
+                    top_scenic += 1 
+                    if t >= tree:
+                        break
+                for t in from_bottom:
+                    bottom_scenic += 1 
+                    if t >= tree:
+                        break
+
+                scenic = left_scenic * right_scenic * top_scenic * bottom_scenic
+                if scenic > max_scenic:
+                    max_scenic = scenic
+
+                    # Don't care about multiple trees, so stop at first? Need to flip things then
                 assert len(from_left) + len(from_right) == data.shape[0] - 1
                 assert len(from_top) + len(from_bottom) == data.shape[0] - 1
 
@@ -60,6 +94,7 @@ def day08(filename):
                         visible_trees.add((rowix, colix))
                         found.loc[(rowix, colix)] = -100
 
+        print("max scenic:", max_scenic)
         print(found)
         breakpoint()
 
