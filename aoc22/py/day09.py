@@ -24,10 +24,10 @@ def day09(filename):
     head, tail = (0, 0), (0, 0)
 
     seen_tails = set([tail])
-    visits = pd.DataFrame(data=[['.'] * 12 for i in range(12)], index=range(-6, 6), columns=range(-6, 6))
+    visits = pd.DataFrame(data=[['.'] * 1200 for i in range(1200)], index=range(-600, 600), columns=range(-600, 600))
     visits.loc[0][0] = 's'
     print(visits)
-    breakpoint()
+    #breakpoint()
     for instr in instructions:
         direction, step = instr
         print(instr)
@@ -42,8 +42,8 @@ def day09(filename):
                 head = head[0] + 1, head[1]
 
             visits.loc[head[0]][head[1]] = 'H'
-            print(visits)
-            breakpoint()
+            #print(visits)
+            #breakpoint()
             body = head[0] - tail[0], head[1] - tail[1]
             print("body", body)
             if sorted(map(abs, body)) in [[0, 0], [0, 1], [1, 1]]:
@@ -102,5 +102,5 @@ def day09(filename):
     print("part2:", part2)
 
 
-#day09(inputs("09"))
-day09(examples("09"))
+day09(inputs("09"))
+#day09(examples("09"))
