@@ -22,62 +22,86 @@ def day09(filename):
             instructions.append((direction, step))
 
     head, tail = (0, 0), (0, 0)
+    snake = [
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+            ]
 
     seen_tails = set([tail])
     visits = pd.DataFrame(data=[['.'] * 1200 for i in range(1200)], index=range(-600, 600), columns=range(-600, 600))
-    visits.loc[0][0] = 's'
-    print(visits)
     #breakpoint()
     for instr in instructions:
         direction, step = instr
         print(instr)
+        #print(visits)
+        visits = pd.DataFrame(data=[['.'] * 1200 for i in range(1200)], index=range(-600, 600), columns=range(-600, 600))
+        visits.loc[0][0] = 's'
+        #breakpoint()
         for s in range(step):
+            print(instr, s)
+            head = snake[0]
             if direction == "R":
-                head = head[0], head[1] + 1
+                snake[0][1] += 1
             if direction == "U":
-                head = head[0] - 1, head[1]
+                snake[0][0] -= 1
             if direction == "L":
-                head = head[0], head[1] - 1
+                snake[0][1] -=1 
             if direction == "D":
-                head = head[0] + 1, head[1]
+                snake[0][0] += 1
 
             visits.loc[head[0]][head[1]] = 'H'
             #print(visits)
-            #breakpoint()
-            body = head[0] - tail[0], head[1] - tail[1]
-            print("body", body)
-            if sorted(map(abs, body)) in [[0, 0], [0, 1], [1, 1]]:
-                # Touching, nevermind
-                print("touching", head, tail)
-                continue
+            #print(snake)
 
-            print("body after touching", body)
+            for ix in range(1, 10):
+                #print(instr, s, ix)
 
-            if body in [(0, 2)]:
-                tail = tail[0], tail[1] + 1
-            elif body in [(0, -2)]:
-                tail = tail[0], tail[1] - 1
-            elif body in [(2, 0)]:
-                tail = tail[0] + 1, tail[1]
-            elif body in [(-2, 0)]:
-                tail = tail[0] - 1, tail[1]
-            else:
-                # Diagonal step
-                # math.copysign?
-                diff = [None, None]
-                if body[0] > 0:
-                    diff[0] = 1
+                #print(visits)
+                #breakpoint()
+                body = snake[ix - 1][0] - snake[ix][0], snake[ix -1][1] - snake[ix][1]
+                #print("body", body)
+                if sorted(map(abs, body)) in [[0, 0], [0, 1], [1, 1]]:
+                    # Touching, nevermind
+                    #print("touching", snake[ix -1], snake[ix])
+                    #visits.loc[tail[0]][tail[1]] = str(ix)
+                    pass
                 else:
-                    diff[0] = -1
-                if body[1] > 0:
-                    diff[1] = 1
-                else:
-                    diff[1] = -1
-                print("diagonal case", head, tail, body, diff)
-                tail = tail[0] + diff[0], tail[1] + diff[1]
+                    #breakpoint()
+                    if body in [(0, 2)]:
+                        snake[ix][1] += 1
+                    elif body in [(0, -2)]:
+                        snake[ix][1] -= 1
+                    elif body in [(2, 0)]:
+                        snake[ix][0] += 1
+                    elif body in [(-2, 0)]:
+                        snake[ix][0] -= 1
+                    else:
+                        # Diagonal step
+                        # math.copysign?
+                        diff = [None, None]
+                        if body[0] > 0:
+                            diff[0] = 1
+                        else:
+                            diff[0] = -1
+                        if body[1] > 0:
+                            diff[1] = 1
+                        else:
+                            diff[1] = -1
+                        print("diagonal case", snake[ix - 1], snake[ix], body, diff)
+                        snake[ix][0] += diff[0]
+                        snake[ix][1] += diff[1]
 
-            seen_tails.add(tail)
-            visits.loc[tail[0]][tail[1]] = 'T'
+                    visits.loc[snake[ix][0]][snake[ix][1]] = str(ix)
+                if ix == 9:
+                    seen_tails.add(tuple(snake[ix]))
 
     part1 = len(seen_tails)
 
@@ -102,5 +126,5 @@ def day09(filename):
     print("part2:", part2)
 
 
+day09(examples("09-2"))
 day09(inputs("09"))
-#day09(examples("09"))
