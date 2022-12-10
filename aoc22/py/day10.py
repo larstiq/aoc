@@ -54,6 +54,17 @@ def day10(filename):
                 #    if cycle > 50:
                 #        breakpoint()
 
+        # Where is the sprite
+        X = registers["X"]
+        if cycle % 40 in (X - 1, X, X + 1):
+            print("#", end='')
+        else:
+            print(".", end='')
+        if cycle % 40 == 0:
+            print()
+
+
+
         if len(instructions) == 0:
             break
         
