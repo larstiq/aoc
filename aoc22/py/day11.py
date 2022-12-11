@@ -20,7 +20,9 @@ class Monkey:
         to_monkies = collections.defaultdict(list)
         for item in self.items:
             self.inspect_count += 1
-            new_worry = math.floor(self.new(item) / 3)
+            new_worry = self.new(item) % (7 * 17 * 11 * 13 * 19 * 2 * 5 * 3)
+            #% (23 * 19 * 13 * 17)
+
             to_monkies[self.test(new_worry)].append(new_worry)
 
         self.items = []
@@ -48,6 +50,17 @@ def day11(filename):
                lambda item: 
                {True: 0, False: 1}[item % 17 == 0])
     ]
+
+    import math
+    #for m in []:
+        #    for n in [23, 19, 13, 17]:
+            #    print(m, n, math.gcd(m, n))
+
+    for m in [7, 17, 11, 13, 19, 2, 5, 3]:
+        for n in [7, 17, 11, 13, 19, 2, 5, 3]:
+            print(m, n, math.gcd(m, n))
+
+    #raise SystemExit
 
 
     monkies = [
@@ -100,15 +113,17 @@ def day11(filename):
     ]
 
 
-    for round_ in range(20):
+    for round_ in range(10000):
         for monkey in monkies:
             for target, new_items in monkey.inspect().items():
                 monkies[target].items.extend(new_items)
 
-        print()
-        print(f"After round {round_}")
-        for ix, monkey in enumerate(monkies):
-            print(f"Monkey {ix}:", monkey.items)
+
+        if round_ % 1000 == 0:
+            print()
+            print(f"After round {round_}")
+            for ix, monkey in enumerate(monkies):
+                print(f"Monkey {ix}:", monkey.items)
 
 
     print([m.inspect_count for m in monkies])
@@ -117,5 +132,5 @@ def day11(filename):
     #print("part2:", part2)
 
 
-day11(examples("11"))
 day11(inputs("11"))
+day11(examples("11"))
