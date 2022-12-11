@@ -2,135 +2,123 @@
 
 from utils import inputs, examples
 
-import pandas as pd
 import collections
-import itertools
+import copy
+import logging
 import math
+
+import sympy
+
+
+old = sympy.symbols("old")
 
 
 class Monkey:
-
-    def __init__(self, items, new, test):
+    def __init__(self, items, worry, divisor, test):
         self.items = items
-        self.new = new
+        self.divisor = divisor
+        self.worry = worry
         self.test = test
         self.inspect_count = 0
 
-    def inspect(self):
+    def inspect(self, divisors):
         to_monkies = collections.defaultdict(list)
         for item in self.items:
             self.inspect_count += 1
-            new_worry = self.new(item) % (7 * 17 * 11 * 13 * 19 * 2 * 5 * 3)
-            #% (23 * 19 * 13 * 17)
+            new_worry = self.worry(item)
 
-            to_monkies[self.test(new_worry)].append(new_worry)
+            if divisors == 1:
+                new_worry //= 3
+            else:
+                new_worry %= divisors
+
+            to_monkies[self.test[new_worry % self.divisor == 0]].append(new_worry)
 
         self.items = []
 
         return to_monkies
 
+    def __str__(self):
+        return f"Monkey: {self.items} worries {self.worry} by {self.divisor} to {self.test}"
+
+    def __repr__(self):
+        return str(self)
+
+
 def day11(filename):
     print()
     print(filename)
 
-    part1 = 0
-    part2 = 0
+    with open(filename) as puzzlein:
 
+        chunks = puzzlein.read().split("Monkey ")
 
-    monkies = [
-        Monkey([79, 98], lambda old: old * 19, lambda item: {True: 2, False: 3}[item % 23 == 0]),
-        Monkey([54, 65, 75, 74],
-               lambda old:  old + 6,
-               lambda item: {True: 2, False: 0}[item % 19 == 0]),
-        Monkey([79, 60, 97],
-               lambda old:old * old,
-               lambda item: 
-               {True: 1, False: 3}[item % 13 == 0]),
-        Monkey([74], lambda old: old + 3,
-               lambda item: 
-               {True: 0, False: 1}[item % 17 == 0])
-    ]
+    monkies = []
+    for c in chunks:
+        if c == "":
+            continue
+        for line in c.split("\n"):
+            line = line.strip()
+            if line.startswith("Starting items: "):
+                items = [int(getal.strip()) for getal in line.split(":")[1].split(",")]
+            elif line.startswith("Operation: "):
+                new_worry = sympy.lambdify(
+                    old, sympy.parse_expr(line.split("=")[1].strip())
+                )
+            elif line.startswith("Test: "):
+                divisor = int(line.split("by")[1].strip())
+            elif line.startswith("If true:"):
+                truemonkey = int(line.split()[-1])
+            elif line.startswith("If false:"):
+                falsemonkey = int(line.split()[-1])
 
-    import math
-    #for m in []:
-        #    for n in [23, 19, 13, 17]:
-            #    print(m, n, math.gcd(m, n))
-
-    for m in [7, 17, 11, 13, 19, 2, 5, 3]:
-        for n in [7, 17, 11, 13, 19, 2, 5, 3]:
-            print(m, n, math.gcd(m, n))
-
-    #raise SystemExit
-
-
-    monkies = [
-        Monkey(
-            [89, 84, 88, 78, 70],
-            lambda old: old * 5,
-            lambda item: {True: 6, False: 7}[item % 7 == 0],
-        ),
-        Monkey(
-            [76, 62, 61, 54, 69, 60, 85],
-            lambda old: old + 1,
-            lambda item: {True: 0, False: 6}[item % 17 == 0],
-        ),
-
-        Monkey(
-            [83, 89, 53],
-            lambda old: old + 8,
-            lambda item: {True: 5, False: 3}[item % 11 == 0],
-        ),
-
-        Monkey(
-            [95, 94, 85, 57],
-            lambda old: old + 4,
-            lambda item: {True: 0, False: 1}[item % 13 == 0],
-        ),
-
-        Monkey(
-            [82, 98],
-            lambda old: old + 7,
-            lambda item: {True: 5, False: 2}[item % 19 == 0],
-        ),
-
-        Monkey(
-            [69],
-            lambda old: old + 2,
-            lambda item: {True: 1, False: 3}[item % 2 == 0],
-        ),
-
-        Monkey(
-            [82, 70, 58, 87, 59, 99, 92, 65],
-            lambda old: old * 11,
-            lambda item: {True: 7, False: 4}[item % 5 == 0],
-        ),
-
-        Monkey(
-            [91, 53, 96, 98, 68, 82],
-            lambda old: old * old,
-            lambda item: {True: 4, False: 2}[item % 3 == 0],
+        monkies.append(
+            Monkey(items, new_worry, divisor, {True: truemonkey, False: falsemonkey})
         )
-    ]
 
+    logging.debug(monkies)
+    part1(copy.deepcopy(monkies))
+    part2(copy.deepcopy(monkies))
+
+
+def score(monkies):
+    top_two = sorted([m.inspect_count for m in monkies])[-2:]
+    business = math.prod(top_two)
+
+    logging.debug("Monkey inspect counts: %s", [m.inspect_count for m in monkies])
+    logging.debug("  top two: %s", top_two)
+    logging.debug("  monkey business: %s", business)
+
+    return business
+
+
+def part1(monkies):
+    for round_ in range(20):
+        for monkey in monkies:
+            for target, new_items in monkey.inspect(1).items():
+                monkies[target].items.extend(new_items)
+
+    print("part1:", score(monkies))
+
+
+def part2(monkies):
+    part2_divisors = math.prod(m.divisor for m in monkies)
 
     for round_ in range(10000):
         for monkey in monkies:
-            for target, new_items in monkey.inspect().items():
+            for target, new_items in monkey.inspect(part2_divisors).items():
                 monkies[target].items.extend(new_items)
 
-
         if round_ % 1000 == 0:
-            print()
-            print(f"After round {round_}")
+            logging.debug("")
+            logging.debug(f"After round {round_}")
             for ix, monkey in enumerate(monkies):
-                print(f"Monkey {ix}:", monkey.items)
+                logging.debug(f"Monkey {ix}: %s", monkey.items)
+
+    print("part2:", score(monkies))
 
 
-    print([m.inspect_count for m in monkies])
-    print(sorted([m.inspect_count for m in monkies])[-2:])
-    #print("part1:", sum(cycle * X for (cycle, X) in signal_strengths if cycle in (20, 60, 100, 140, 180, 220)))
-    #print("part2:", part2)
-
+logging.getLogger().setLevel(logging.WARN)
 
 day11(inputs("11"))
 day11(examples("11"))
