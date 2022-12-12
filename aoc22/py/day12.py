@@ -34,7 +34,7 @@ def day12(filename):
     print(df)
     # TODO: might need to adjust to a and z
     print(df == 0) # start
-    breakpoint()
+    #breakpoint()
     # print(df == len(dingen) - 1) end
 
     graph = networkx.DiGraph()
@@ -51,8 +51,7 @@ def day12(filename):
             neigh_idx = idx[0] + direction[0], idx[1] + direction[1]
             try:
                 neighbour = df.loc[neigh_idx[0]][neigh_idx[1]]
-            except KeyError:
-                continue
+            except KeyError: continue
 
             #if len({idx, neigh_idx}.intersection({(2, 5), (3, 6)})) > 0:
                 #    breakpoint()
@@ -89,7 +88,24 @@ def day12(filename):
     print(steps)
     #breakpoint()
     print(graph)
+
+
     print(len(networkx.shortest_path(graph, start, end)))
+
+    coord = (df == 'a').stack()
+    coord[coord == False] = np.nan
+
+    opts = []
+    for s in coord.dropna().index:
+        try:
+            opts.append(len(networkx.shortest_path(graph, s, end)))
+        except:
+            pass
+
+    print(opts)
+    print(min(opts))
+    breakpoint()
+    
 
             
 def pairwise(iterable):
