@@ -96,6 +96,8 @@ def day12(filename):
     coord[coord == False] = np.nan
 
     opts = []
+    import time
+    print(filename, "part2", time.time())
     for s in coord.dropna().index:
         try:
             opts.append(len(networkx.shortest_path(graph, s, end)))
@@ -104,7 +106,8 @@ def day12(filename):
 
     print(opts)
     print(min(opts))
-    breakpoint()
+    print(filename, "part2", time.time())
+    #breakpoint()
     
 
             

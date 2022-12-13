@@ -118,7 +118,7 @@ def part2(monkies):
     print("part2:", score(monkies))
 
 
-logging.getLogger().setLevel(logging.WARN)
+logging.getLogger().setLevel(logging.DEBUG)
 
 day11(inputs("11"))
 day11(examples("11"))
