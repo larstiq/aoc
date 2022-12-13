@@ -10,21 +10,15 @@ import math
 import more_itertools
 
 
-def sign(number):
-    if number == 0:
-        return number
-    return int(math.copysign(1, number))
-
-
 def compare_packets(left, right):
     if isinstance(left, list) and isinstance(right, list):
         for (l, r) in zip(left, right):
             res = compare_packets(l, r)
             if res != 0:
                 return res
-        return sign(len(left) - len(right))
+        return len(left) - len(right)
     elif isinstance(left, int) and isinstance(right, int):
-        return sign(left - right)
+        return left - right
     elif isinstance(left, int) and isinstance(right, list):
         return compare_packets([left], right)
     elif isinstance(left, list) and isinstance(right, int):
@@ -40,7 +34,7 @@ def day13(filename):
 
     right_order_sum = 0
     for ix, (left, right) in enumerate(more_itertools.chunked(packets, 2)):
-        if compare_packets(left, right) == -1:
+        if compare_packets(left, right) < 0:
             right_order_sum += 1 + ix
         logging.debug("index: %s left: %s right: %s", ix, left, right)
 
