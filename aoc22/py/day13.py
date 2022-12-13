@@ -2,88 +2,59 @@
 
 from utils import inputs, examples
 
-import collections
-import copy
+import functools
+import json
 import logging
 import math
 
-import sympy
-
-import pandas as pd
-
-import numpy as np
-import string
-import networkx
-import itertools
+import more_itertools
 
 
-def cmp_nested_list(left, right):
-    for (l, r) in zip(left, right):
-        if isinstance(l, int) and isinstance(r, int):
-            if l == r:
-                continue
-            if l < r:
-                return -1
-            else:
-                return 1
-        elif isinstance(l, list) and isinstance(r, list):
-            res = cmp_nested_list(l, r)
-            if res == 0:
-                continue
-            return res
-        elif isinstance(l, int) and isinstance(r, list):
-            return cmp_nested_list([l], r)
-        elif isinstance(l, list) and isinstance(r, int):
-            return cmp_nested_list(l, [r])
+def sign(number):
+    if number == 0:
+        return number
+    return int(math.copysign(1, number))
 
-    # All items compare equal, are lists same length?
-    if len(left) == len(right):
-        return 0
 
-    if len(left) < len(right):
-        return -1
-    else:
-        return 1
-
+def compare_packets(left, right):
+    if isinstance(left, list) and isinstance(right, list):
+        for (l, r) in zip(left, right):
+            res = compare_packets(l, r)
+            if res != 0:
+                return res
+        return sign(len(left) - len(right))
+    elif isinstance(left, int) and isinstance(right, int):
+        return sign(left - right)
+    elif isinstance(left, int) and isinstance(right, list):
+        return compare_packets([left], right)
+    elif isinstance(left, list) and isinstance(right, int):
+        return compare_packets(left, [right])
 
 
 def day13(filename):
     print()
     print(filename)
 
-    packet_pairs = []
-    all_packets = []
     with open(filename) as puzzlein:
-        packets = puzzlein.read()
-
-        for pair in packets.split("\n\n"):
-            packet_pairs.append(tuple(map(eval, pair.strip().split("\n"))))
-            all_packets.extend(packet_pairs[-1])
-
+        packets = [json.loads(line) for line in puzzlein if line.strip() != ""]
 
     right_order_sum = 0
-    for ix, (left, right) in enumerate(packet_pairs):
-        if cmp_nested_list(left, right) == -1:
+    for ix, (left, right) in enumerate(more_itertools.chunked(packets, 2)):
+        if compare_packets(left, right) == -1:
             right_order_sum += 1 + ix
-        print(ix, left, right)
+        logging.debug("index: %s left: %s right: %s", ix, left, right)
 
     print("part1:", right_order_sum)
 
-
-    import functools
     dividers = [[[2]], [[6]]]
-    all_packets_plus_diviers = all_packets + dividers
-    all_packets_plus_diviers.sort(key=functools.cmp_to_key(cmp_nested_list))
+    divided_packets = packets + dividers
+    divided_packets.sort(key=functools.cmp_to_key(compare_packets))
+
+    decoder = math.prod(map(lambda d: divided_packets.index(d) + 1, dividers))
+    print("part2:", decoder)
 
 
-    print("part2:", (all_packets_plus_diviers.index(dividers[0]) + 1) * (1 + all_packets_plus_diviers.index(dividers[1])))
-
-
-
-
-
-
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.WARN)
 
 day13(examples("13"))
 day13(inputs("13"))
