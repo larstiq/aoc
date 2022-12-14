@@ -53,6 +53,13 @@ def day14(filename):
 
     # TODO: copy cave with rock
 
+    cave_with_rock = cave.copy()
+
+    floor = max_y + 2
+
+    cave.loc[floor - 1] = '.'
+    cave.loc[floor] = '#'
+
     #print(cave)
 
 
@@ -77,11 +84,25 @@ def day14(filename):
                     #breakpoint()
                     break
             except KeyError:
-                on_the_map = False
-                break
-        if not on_the_map:
+                print("Extending sand", current_sand[0])
+                #breakpoint()
+
+                if current_sand[0] not in cave.columns:
+                    cave[current_sand[0]] = '.'
+                    cave[current_sand[0]][floor] = '#'
+                elif (current_sand[0] - 1) not in cave.columns:
+                    cave[current_sand[0] - 1] = '.'
+                    cave[current_sand[0] - 1][floor] = '#'
+                elif (current_sand[0] + 1) not in cave.columns:
+                    cave[current_sand[0] + 1] = '.'
+                    cave[current_sand[0] + 1][floor] = '#'
+
+                #print(cave)
+
+        if cave[500][0] == '+':
             break
 
+    print(cave)
     print("part1:", sand)
 
 
