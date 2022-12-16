@@ -32,72 +32,61 @@ def day16(filename):
     print(valves.nodes)                                
     print(valves.edges)
 
-
-    counter = [0]
-
-    def options(current, minutes, pressure, ons, closed):
-        if minutes == 30:
-            counter[0] += 1
-            return [(pressure, minutes, current, tuple(ons))]
-        if minutes > 30:
-            breakpoint()
-
-        solutions = []
-
-        # TODO: this assumption might be wrong, but if opening a valve and moving to the next chamber both cost 1 minute, is it ever wrong to just open the valve? 
-        # Scenarios:
-        #    1) open and move, cost 2: , extra pressure is 1 * capacity
-        #    2) move, cost 1, extra pressure is 0
-
-
-        new_ons = ons.copy()
-        new_closed = closed.copy()
-        new_minutes = minutes
-        new_pressure = pressure
-        if current in closed:
-            new_ons = ons | {current: valves.nodes[current]['weight']}
-            new_closed = closed - set([current])
-            new_minutes += 1
-            new_pressure += sum(new_ons.values())
-
-            if new_minutes == 30:
-                counter[0] += 1
-                return [(new_pressure, new_minutes, current, tuple(new_ons))]
-
-
-        #if new_minutes == 29:
-            #    breakpoint()
-        # We want to relieve pressure, we need to visit closed valves
-        for c in new_closed:
-            length, path = nx.algorithms.multi_source_dijkstra(valves, {c}, target=current)
-
-            next_minutes = new_minutes
-            next_pressure = new_pressure
-
-            # what's the shortest path to get to one of the open nodes?
-            for node in reversed(path[:-1]):
-                next_minutes += 1
-                if next_minutes > 30:
-                    break
-                next_pressure += sum(new_ons.values())
-                if node in new_ons:
-                    continue
-                else: 
-                    solutions.extend(options(node, next_minutes, next_pressure, new_ons, new_closed))
-                    break
-
-        if counter[0] % 10000 == 0:
-            print(solutions)
-
-        return solutions
-
-
-
-    closed = set(n for n in valves.nodes if valves.nodes[n]['weight'] > 0)
+    profitable_nodes = set(n for n in valves.nodes if valves.nodes[n]['weight'] > 0)
+    closed = profitable_nodes.copy()
     opened = set()
 
-    alles = options('AA', 0, 0, {}, closed)
+
+
+
+    # What state do we need to keep track of?
+    # If at minute M we are currently at node A, and nodes O are open, then we
+    # don't care how we got here we just go with the highest pressure option
+    # since that represents the best way of having gotten here.
+    #
+    # So the key should be (current, open) and the value should be pressure
+    #
+    # Also storing the 
+
+    from dataclasses import dataclass
+
+    @dataclass
+    class State:
+        pressure: int
+        path: tuple[str]
+
+        def __lt__(self, other):
+            return self.pressure < other.pressure
+
+    options = {("AA", frozenset(closed)): State(0, ())}
+
+    from collections import defaultdict
+    for minute in range(1, 30 + 1):
+        print("Starting on minute", minute)
+
+        candidates = defaultdict(list)
+
+        for (current, closed), state in options.items():
+            opens = profitable_nodes - closed
+            new_pressure = state.pressure + sum(valves.nodes[o]['weight'] for o in opens)
+            #print("New pressure", new_pressure, closed)
+            # Is it quicker to just look at the weight?
+            if current in closed:
+                candidates[(current, closed - { current } )].append(State(new_pressure, state.path + ((minute, current, new_pressure),)))
+
+            for neighbour in valves[current]:
+                candidates[(neighbour, closed)].append(State(new_pressure, state.path + ((minute, neighbour, new_pressure), )))
+
+        #breakpoint()
+        options.clear()
+        options = {opt: max(states) for opt, states in candidates.items()}
+        print(max(options.values()))
+
+
+    print("Best path")
+    print(max(options.values()))
     breakpoint()
+
 
 
 logging.getLogger().setLevel(logging.WARN)
