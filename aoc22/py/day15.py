@@ -9,8 +9,6 @@ import math
 
 import more_itertools
 
-import pandas as pd
-
 def day15(filename):
     print()
     print(filename)
@@ -45,31 +43,50 @@ def day15(filename):
 
     covered_by_sensor = set()
     row = 2000000
-    for ix, s in enumerate(sensors):
-        print()
-        print("Looking at sensor", ix, s)
-        #y_d = abs(s[1] - 2000000)
-        y_d = abs(s[1] - row)
+    row = 10
+    max_row = min(max(max_x, max_y), 4000000)
 
-        max_d = distances[ix]
-        print("Distances", y_d, "<?", max_d)
-        if y_d < max_d:
-            max_x_d = max_d - y_d
-            print("  and thus", max_x_d)
-            #breakpoint()
-
-            covered_by_sensor |= set((x, row) for x in range(s[0] - max_x_d, s[0] + max_x_d + 1))
+    beacons_s = set(beacons)
+    sensors_s = set(sensors)
+    sensors_or_beacons = beacons_s | sensors_s
 
 
-    print('cover')
+    for x in range(0, max_row + 1):
+        intersections = []
+        for ix, s in enumerate(sensors):
+            max_d = distances[ix]
+            # TODO: sort the balls so can skip linearly through
 
-    no_beacon = covered_by_sensor.difference(set(beacons)).difference(set(sensors))
-    #print(no_bea
-    print("part1:", len(no_beacon))
-    breakpoint()
+            # We fall within the sensor
+            if abs(x - s[0]) < max_d:
+                # At this level of x, which bits of y do we get?
+                # We are within the sensor ball, skip to the next we need to check
+                max_y = max_d - abs(x - s[0])
+                
+                intersections.append((s[1] - max_y, s[1] + max_y))
 
+        intersections.sort()
+
+
+        # We know we're sorted
+        def combine(p1, p2):
+            return min(p1[0], p2[0]), max(p1[1], p2[1])
+
+        current = None
+        collapsed = []
+        current = intersections[0]
+        for interval in intersections:
+            if current[1] + 1 < interval[0]:
+                collapsed.append(current)
+                current = interval
+            else:
+                current = combine(current, interval)
+
+        collapsed.append(current)
+        if len(collapsed) > 1:
+            print("part2:", x * 4000000 + collapsed[0][1] + 1)
 
 logging.getLogger().setLevel(logging.WARN)
 
-#day15(examples("15"))
+day15(examples("15"))
 day15(inputs("15"))
