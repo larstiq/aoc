@@ -101,10 +101,14 @@ def part2(closed, valves, profitable_nodes):
     # Now we have a helperfant so we need to track two positions
     options = {(frozenset(["AA"]), frozenset(closed)): State(0, ())}
 
+    max_rate = max(valves.nodes[no]['weight'] for no in valves.nodes)
+    #print("max rate:", max_rate)
+    #breakpoint()
+
     for minute in range(1, 26 + 1):
         print("Starting on minute", minute)
 
-        candidates = defaultdict(list)
+        candidates = {}
 
         for (positions, closed), state in options.items():
             opens = profitable_nodes - closed
@@ -115,44 +119,47 @@ def part2(closed, valves, profitable_nodes):
             # Is it quicker to just look at the weight?
 
             if len(positions) == 1:
-                current = ecurrent = list(positions)[0]
+                you, = elephant, = positions
             else:
-                current, ecurrent = list(positions)
+                you, elephant = sorted(positions)
 
-            if current in closed:
-                if ecurrent in closed:
-                    # Both opening
-                    key = frozenset({current, ecurrent}), closed - { current, ecurrent}
-                    if len(key[0]) == 0:
+            yous = list(valves[you])
+            elephants = list(valves[elephant])
+
+            if you in closed:
+                yous += [you]
+            if elephant in closed and you != elephant:
+                elephants += [elephant]
+
+            for next_you in yous:
+                for next_elephant in elephants:
+                    if (you, elephant) == (next_elephant, next_you):
+                        # Swapping places won't help, nor will both opening the same vale help
+                        continue
+
+                    new_closed = frozenset(closed)
+                    if next_you == you:
+                        new_closed = new_closed - {you}
+                    if next_elephant == elephant:
+                        new_closed = new_closed - {elephant}
+
+                    key = (frozenset({next_you, next_elephant}), new_closed)
+                    if len(key[0]) > 2:
                         breakpoint()
-                    candidates[key].append(State(new_pressure, state.path + ((minute, (current, ecurrent), new_pressure),)))
-                else:
-                    # You opening
-                    for neighbour in valves[ecurrent]:
-                        key = frozenset({current, neighbour}), closed
-                        if len(key[0]) == 0:
-                            breakpoint()
-                        candidates[key].append(State(new_pressure, state.path + ((minute, (current, neighbour), new_pressure), )))
-            else:
-                if ecurrent in closed:
-                    # Elephant opening
-                    for neighbour in valves[current]:
-                        key = frozenset({neighbour, ecurrent}), closed - {ecurrent}
-                        if len(key[0]) == 0:
-                            breakpoint()
-                        candidates[key].append(State(new_pressure, state.path + ((minute, (neighbour, ecurrent), new_pressure), )))
-                else:
-                    for neighbour in valves[current]:
-                        for eneighbour in valves[ecurrent]:
-                            key = frozenset({neighbour, eneighbour}), closed
-                            if len(key[0]) == 0:
-                                breakpoint()
-                            candidates[key].append(State(new_pressure, state.path + ((minute, (neighbour, eneighbour), new_pressure), )))
+                    # Is this taking up too much memory? Let's try without
+                    #candidates[key].append(State(new_pressure, state.path + ((minute, key, new_pressure), )))
+
+                    if key in candidates:
+                        if candidates[key].pressure < new_pressure:
+                            candidates[key] = State(new_pressure, [])
+                    else:
+                        candidates[key] = State(new_pressure, [])
 
         #breakpoint()
         options.clear()
-        options = {opt: max(states) for opt, states in candidates.items()}
-        print(max(options.values()))
+        max_state = max(candidates.values())
+        max_pressure = max_state.pressure
+        options = {opt: state for (opt, state) in candidates.items() if state.pressure + (26 - minute) * max_rate >= max_pressure}
 
 
     #print("Best path")
@@ -164,4 +171,4 @@ def part2(closed, valves, profitable_nodes):
 logging.getLogger().setLevel(logging.WARN)
 
 day16(examples("16"))
-#day16(inputs("16"))
+day16(inputs("16"))
