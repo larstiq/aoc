@@ -13,6 +13,8 @@ import networkx as nx
 from collections import defaultdict
 from dataclasses import dataclass
 
+import numpy as np
+
 
 @dataclass
 class Block:
@@ -21,16 +23,50 @@ class Block:
     shape: int
     stopped: bool
 
-    def left(self):
-        if self.lr > 0:
-            self.lr -= 1
+    def left(self, field):
+        # This works fine for the wall but not for blocks, bleh
+        if self.lr == 0:
+            return
 
-    def right(self):
         shape = self.shape
+        if shape == 0:
+            # Is the cell left to us free?
+            if field[self.td, self.lr - 1] == False:
+                self.lr -= 1
+        elif shape == 1:
+            # Are the cells left of the edge free?
+            if (field[self.td, self.lr] == False and
+                field[self.td + 1, self.lr - 1] == False and
+                field[self.td + 2, self.lr] == False):
+                self.lr -= 1
+        elif shape == 2:
+            #breakpoint()
+            if (field[self.td, self.lr - 1] == False and
+                field[self.td + 1, self.lr + 1] == False and
+                field[self.td + 2, self.lr + 1] == False):
+                self.lr -= 1
+        elif shape == 3:
+            if (field[self.td, self.lr - 1] == False and
+                field[self.td + 1, self.lr - 1] == False and
+                field[self.td + 2, self.lr - 1] == False and
+                field[self.td + 3, self.lr - 1] == False):
+                self.lr -= 1
+        elif shape == 4:
+            if (field[self.td, self.lr - 1] == False and
+                field[self.td + 1, self.lr - 1] == False):
+                self.lr -= 1
+
+
+    def right(self, field):
+        shape = self.shape
+
         # 0123456
         #   ####
         if shape == 0:
-            if self.lr < 3:
+            if self.lr == 3:
+                return
+            # Is the cell left to us free?
+            if field[self.td, self.lr + 4] == False:
                 self.lr += 1
 
         # 0123456
@@ -38,35 +74,45 @@ class Block:
         #   ###
         #    #
         #
+        elif shape == 1:
+            # Are the cells right of the edge free?
+            if (field[self.td, self.lr + 2] == False and
+                field[self.td + 1, self.lr + 3] == False and
+                field[self.td + 2, self.lr + 2] == False):
+                self.lr += 1
+
         # 0123456
         #     #
         #     #
         #   ###
-        elif shape in (1, 2):
-            if self.lr < 4:
+        elif shape == 2:
+            if (field[self.td, self.lr + 3] == False and
+                field[self.td + 1, self.lr + 3] == False and
+                field[self.td + 2, self.lr + 3] == False):
                 self.lr += 1
-
-
         # 0123456
         #   #
         #   #
         #   #
         #   #
         elif shape == 3:
-            if self.lr < 6:
+            if (field[self.td, self.lr + 1] == False and
+                field[self.td + 1, self.lr + 1] == False and
+                field[self.td + 2, self.lr + 1] == False and
+                field[self.td + 3, self.lr + 1] == False):
                 self.lr += 1
 
         # 0123456
         #
         #   ##
         #   ##
-
-        elif shape == 3:
-            if self.lr < 5:
+        elif shape == 4:
+            if (field[self.td, self.lr + 2] == False and
+                field[self.td + 1, self.lr + 2] == False):
                 self.lr += 1
 
 
-    def down(self, tops):
+    def down(self, tops, field):
         if self.stopped:
             return
 
@@ -78,7 +124,10 @@ class Block:
         # Now it depends on the shape
         shape = self.shape
         if shape == 3:
-            self.stopped = True
+            if field[self.td - 1, self.lr] == True:
+                self.stopped = True
+            else:
+                self.td -= 1
 
         if shape == 4:
             if self.td - 1 in (tops[self.lr], tops[self.lr + 1]):
@@ -87,7 +136,6 @@ class Block:
                 self.td -= 1
 
         if shape == 2:
-            breakpoint()
             if self.td - 1 in tops[self.lr:self.lr + 3]:
                 self.stopped = True
             else:
@@ -105,26 +153,39 @@ class Block:
             else:
                 self.td -= 1
 
-    def update_tops(self, tops):
+    def update_tops(self, tops, field):
         shape = self.shape
         if shape == 4:
+            field[self.td:self.td + 2, self.lr:self.lr + 2] = True
+
             tops[self.lr] = self.td + 1
             tops[self.lr + 1] = self.td + 1
 
         if shape == 3:
+            field[self.td:self.td + 4, self.lr] = True
+
             tops[self.lr] = self.td + 3
 
         if shape == 2:
+            field[self.td, self.lr:self.lr + 3] = True
+            field[self.td + 1, self.lr + 2] = True
+            field[self.td + 2, self.lr + 2] = True
+
             tops[self.lr] = self.td
             tops[self.lr + 1] = self.td
             tops[self.lr + 2] = self.td + 2
 
         if shape == 1:
+            field[self.td, self.lr + 1] = True
+            field[self.td + 1, self.lr:self.lr + 3] = True
+            field[self.td + 2, self.lr + 1] = True
+
             tops[self.lr] = self.td + 1
             tops[self.lr + 1] = self.td + 2
             tops[self.lr + 2] = self.td + 1
 
         if shape == 0:
+            field[self.td, self.lr:self.lr + 4] = True
             tops[self.lr] = self.td
             tops[self.lr + 1] = self.td
             tops[self.lr + 2] = self.td
@@ -132,8 +193,9 @@ class Block:
 
 
 
-def blocks(lr, td):
-    pass
+def display_field(field):
+    for row in range(field.shape[0] - 1, 0, -1):
+        print("".join("#" if cell else "." for cell in field[row, :]))
 
 def day17(filename):
     print()
@@ -146,6 +208,8 @@ def day17(filename):
     tops = [0, 0, 0, 0, 0, 0, 0]
     assert len(tops) == 7
 
+
+    field = np.zeros((5000, 7), dtype=bool)
     breakpoint()
     for iblock in range(0, 10):
         block = Block(lr=2, td=max(tops) + 4, shape=iblock % 5, stopped=False)
@@ -155,15 +219,16 @@ def day17(filename):
 
             print("Jet", jet, "pattern", jetpattern[jet], end=' ,')
             if jetpattern[jet] == '<':
-                block.left()
+                block.left(field)
             else:
-                block.right()
+                block.right(field)
 
             # down
-            block.down(tops)
+            block.down(tops, field)
             print(block, tops)
         
-        block.update_tops(tops)
+        block.update_tops(tops, field)
+        display_field(field[:max(tops) + 1, :])
         print(iblock, tops)
         print()
 
