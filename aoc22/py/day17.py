@@ -196,23 +196,6 @@ class Block:
         if shape == 0:
             field[td][self.lr:self.lr + 4] = True, True, True, True
 
-    def top(self):
-        shape = self.shape
-        if shape == 4:
-            return self.td + 1
-
-        if shape == 3:
-            return self.td + 3
-
-        if shape == 2:
-            return self.td + 2
-
-        if shape == 1:
-            return self.td + 2
-
-        if shape == 0:
-            return self.td
-
 
 
 def display_field(field, start, top):
@@ -244,6 +227,7 @@ def day17(filename):
     start_computation = time.time()
 
     widths = [4, 3, 3, 1, 2]
+    tops = [0, 2, 2, 3, 1]
     for iblock in range(0, 1000000000000):
     #for iblock in range(0, 2022):
     #for iblock in range(0, 200000):
@@ -299,7 +283,7 @@ def day17(filename):
             #logging.debug("Jet %s pattern %s : %s, %s", jet, move, block, top) 
         
         block.update_tops(field)
-        top = max(top, block.top())
+        top = max(top, block.td + tops[shape])
 
         if iblock % 500000 == 1:
             sofar = int(time.time() - start_computation)
