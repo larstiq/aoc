@@ -37,9 +37,9 @@ class Block:
                 self.lr -= 1
         elif shape == 1:
             # Are the cells left of the edge free?
-            if (field[td + 0][self.lr] == False and
+            if (field[td + 0][self.lr + 0] == False and
                 field[td + 1][self.lr - 1] == False and
-                field[td + 2][self.lr] == False):
+                field[td + 2][self.lr + 0] == False):
                 self.lr -= 1
         elif shape == 2:
             #breakpoint()
@@ -62,12 +62,14 @@ class Block:
     def right(self, start_of_field, field):
         shape = self.shape
         td = self.td - start_of_field
+        width = [4, 3, 3, 1, 2][shape]
+
+        if 7 - width == self.lr:
+            return
 
         # 0123456
         #    ####
         if shape == 0:
-            if self.lr == 3:
-                return
             # Is the cell left to us free?
             if field[td][self.lr + 4] == False:
                 self.lr += 1
@@ -77,8 +79,6 @@ class Block:
         #     ###
         #      #
         elif shape == 1:
-            if self.lr == 4:
-                return
             # Are the cells right of the edge free?
             if (field[td][self.lr + 2] == False and
                 field[td + 1][self.lr + 3] == False and
@@ -90,8 +90,6 @@ class Block:
         #       #
         #     ###
         elif shape == 2:
-            if self.lr == 4:
-                return
             if (field[td][self.lr + 3] == False and
                 field[td + 1][self.lr + 3] == False and
                 field[td + 2][self.lr + 3] == False):
@@ -102,8 +100,6 @@ class Block:
         #       #
         #       #
         elif shape == 3:
-            if self.lr == 6:
-                return
             if (field[td][self.lr + 1] == False and
                 field[td + 1][self.lr + 1] == False and
                 field[td + 2][self.lr + 1] == False and
@@ -115,8 +111,6 @@ class Block:
         #      ##
         #      ##
         elif shape == 4:
-            if self.lr == 5:
-                return
             if (field[td][self.lr + 2] == False and
                 field[td + 1][self.lr + 2] == False):
                 self.lr += 1
