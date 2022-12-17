@@ -61,7 +61,7 @@ class Block:
         shape = self.shape
 
         # 0123456
-        #   ####
+        #    ####
         if shape == 0:
             if self.lr == 3:
                 return
@@ -70,11 +70,12 @@ class Block:
                 self.lr += 1
 
         # 0123456
-        #    #
-        #   ###
-        #    #
-        #
+        #      #
+        #     ###
+        #      #
         elif shape == 1:
+            if self.lr == 4:
+                return
             # Are the cells right of the edge free?
             if (field[self.td, self.lr + 2] == False and
                 field[self.td + 1, self.lr + 3] == False and
@@ -82,20 +83,24 @@ class Block:
                 self.lr += 1
 
         # 0123456
-        #     #
-        #     #
-        #   ###
+        #       #
+        #       #
+        #     ###
         elif shape == 2:
+            if self.lr == 4:
+                return
             if (field[self.td, self.lr + 3] == False and
                 field[self.td + 1, self.lr + 3] == False and
                 field[self.td + 2, self.lr + 3] == False):
                 self.lr += 1
         # 0123456
-        #   #
-        #   #
-        #   #
-        #   #
+        #       #
+        #       #
+        #       #
+        #       #
         elif shape == 3:
+            if self.lr == 6:
+                return
             if (field[self.td, self.lr + 1] == False and
                 field[self.td + 1, self.lr + 1] == False and
                 field[self.td + 2, self.lr + 1] == False and
@@ -104,9 +109,11 @@ class Block:
 
         # 0123456
         #
-        #   ##
-        #   ##
+        #      ##
+        #      ##
         elif shape == 4:
+            if self.lr == 5:
+                return
             if (field[self.td, self.lr + 2] == False and
                 field[self.td + 1, self.lr + 2] == False):
                 self.lr += 1
@@ -210,14 +217,12 @@ def day17(filename):
 
 
     field = np.zeros((5000, 7), dtype=bool)
-    breakpoint()
-    for iblock in range(0, 10):
+    for iblock in range(0, 2022):
         block = Block(lr=2, td=max(tops) + 4, shape=iblock % 5, stopped=False)
         while not block.stopped:
             jet += 1
             jet %= len(jetpattern)
 
-            print("Jet", jet, "pattern", jetpattern[jet], end=' ,')
             if jetpattern[jet] == '<':
                 block.left(field)
             else:
@@ -225,13 +230,21 @@ def day17(filename):
 
             # down
             block.down(tops, field)
-            print(block, tops)
+            logging.debug("Jet %s pattern %s : %s, %s", jet, jetpattern[jet], block, tops) 
         
         block.update_tops(tops, field)
-        display_field(field[:max(tops) + 1, :])
-        print(iblock, tops)
-        print()
+        
+        if iblock % 100 == 0:
+            display_field(field[:max(tops) + 1, :])
+            print(iblock, tops)
+            print()
 
+    for row in range(field.shape[0] - 1, 0, -1):
+        if field[row, :].any():
+            print("part1:", row)
+            break
+
+    breakpoint()
 
 
 
