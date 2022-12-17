@@ -166,43 +166,43 @@ class Block:
             else:
                 self.stopped = True
 
-    def update_tops(self, tops, field):
+    def update_tops(self, field):
         shape = self.shape
         if shape == 4:
             field[self.td:self.td + 2, self.lr:self.lr + 2] = True
 
-            tops[self.lr] = self.td + 1
-            tops[self.lr + 1] = self.td + 1
-
         if shape == 3:
             field[self.td:self.td + 4, self.lr] = True
-
-            tops[self.lr] = self.td + 3
 
         if shape == 2:
             field[self.td, self.lr:self.lr + 3] = True
             field[self.td + 1, self.lr + 2] = True
             field[self.td + 2, self.lr + 2] = True
 
-            tops[self.lr] = self.td
-            tops[self.lr + 1] = self.td
-            tops[self.lr + 2] = self.td + 2
-
         if shape == 1:
             field[self.td, self.lr + 1] = True
             field[self.td + 1, self.lr:self.lr + 3] = True
             field[self.td + 2, self.lr + 1] = True
 
-            tops[self.lr] = self.td + 1
-            tops[self.lr + 1] = self.td + 2
-            tops[self.lr + 2] = self.td + 1
-
         if shape == 0:
             field[self.td, self.lr:self.lr + 4] = True
-            tops[self.lr] = self.td
-            tops[self.lr + 1] = self.td
-            tops[self.lr + 2] = self.td
-            tops[self.lr + 3] = self.td
+
+    def top(self):
+        shape = self.shape
+        if shape == 4:
+            return self.td + 1
+
+        if shape == 3:
+            return self.td + 3
+
+        if shape == 2:
+            return self.td + 2
+
+        if shape == 1:
+            return self.td + 2
+
+        if shape == 0:
+            return self.td
 
 
 
@@ -218,13 +218,12 @@ def day17(filename):
         jetpattern = puzzlein.read().strip()
 
     jet = -1
-    tops = [0, 0, 0, 0, 0, 0, 0]
-    assert len(tops) == 7
 
 
+    top = 0
     field = np.zeros((5000, 7), dtype=bool)
     for iblock in range(0, 2022):
-        block = Block(lr=2, td=max(tops) + 4, shape=iblock % 5, stopped=False)
+        block = Block(lr=2, td=top + 4, shape=iblock % 5, stopped=False)
         while not block.stopped:
             jet += 1
             jet %= len(jetpattern)
@@ -236,13 +235,14 @@ def day17(filename):
 
             # down
             block.down(field)
-            logging.debug("Jet %s pattern %s : %s, %s", jet, jetpattern[jet], block, tops) 
+            logging.debug("Jet %s pattern %s : %s, %s", jet, jetpattern[jet], block, top) 
         
-        block.update_tops(tops, field)
+        block.update_tops(field)
+        top = max(top, block.top())
         
         if iblock % 100 == 0:
-            display_field(field[:max(tops) + 1, :])
-            print(iblock, tops)
+            display_field(field[:top + 1, :])
+            print(iblock, top)
             print()
 
     for row in range(field.shape[0] - 1, 0, -1):
@@ -260,4 +260,4 @@ def day17(filename):
 logging.getLogger().setLevel(logging.WARN)
 
 day17(examples("17"))
-#day17(inputs("17"))
+day17(inputs("17"))
