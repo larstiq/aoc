@@ -7,6 +7,8 @@ import json
 import logging
 import math
 
+import more_itertools
+
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -152,10 +154,14 @@ class Block:
             else:
                 self.stopped = True
 
+        #      #
+        #     ###
+        #  td  #
+        #     012 
         elif shape == 1:
-            if (field[td][self.lr] == False and
+            if (field[td + 0][self.lr] == False and
                 field[td - 1][self.lr + 1] == False and
-                field[td][self.lr + 2] == False):
+                field[td + 0][self.lr + 2] == False):
                 self.td -= 1
             else:
                 self.stopped = True
@@ -216,9 +222,9 @@ class Block:
 
 def display_field(field, start, top):
 
-    dis_start = min(field.shape[0] - 1, top - start)
+    dis_start = min(len(field) - 1, top - start)
     for row in range(dis_start, 0, -1):
-        print(f"{start + row:<5}", "".join("#" if cell else "." for cell in field[row, :]))
+        print(f"{start + row:<5}", "".join("#" if cell else "." for cell in field[row]))
 
 
 
@@ -229,10 +235,9 @@ def day17(filename):
     print(filename)
 
     with open(filename) as puzzlein:
-        jetpattern = itertools.cycle([-1 if j == '<' else 1 for j in puzzlein.read().strip()])
-
-    jet = 0
-
+        gusts = puzzlein.read().strip()
+        data = [-1 if j == '<' else 1 for j in gusts]
+        jetpattern = itertools.cycle(data)
 
     top = 0
     field_size = 50000
@@ -243,23 +248,30 @@ def day17(filename):
     start_computation = time.time()
 
     widths = [4, 3, 3, 1, 2]
-    for iblock in range(0, 1000000000000):
+    #for iblock in range(0, 1000000000000):
         #for iblock in range(0, 2022):
+    for iblock in range(0, 20):
         pos = 2
+
+        if iblock == 1:
+            breakpoint()
 
         shape = iblock % 5
         width = widths[shape]
 
-        for ix in range(4):
-            move = next(jetpattern)
+        moves = more_itertools.take(4, jetpattern)
+        print("moves for iblock", moves, iblock)
+        for move in moves:
             pos = min(7 - width, max(0, pos + move))
-        jet = jet + 4
 
-        block = Block(lr=pos, td=top, shape=shape, stopped=False)
-        block.down(start_of_field, field )
+        block = Block(lr=pos, td=top + 1, shape=shape, stopped=False)
+        block.down(start_of_field, field)
 
         while not block.stopped:
             move = next(jetpattern)
+            print("another move", move, "for iblock", iblock, "at", block.td)
+            if block.td < 0:
+                breakpoint()
 
             # Idea 1: we don't need to do the left and right shifting at least
             # until we're at risk of collision, and then we can just sum them
@@ -284,29 +296,32 @@ def day17(filename):
 
             # down
             block.down(start_of_field, field)
-            logging.debug("Jet %s pattern %s : %s, %s", jet, move, block, top) 
+            #logging.debug("Jet %s pattern %s : %s, %s", jet, move, block, top) 
         
         block.update_tops(start_of_field, field)
         top = max(top, block.top())
 
-        if iblock % 50000 == 0:
+        if iblock % 500000 == 0:
             #display_field(field[:top + 1, :])
             print(iblock / 1000000000000, int(time.time() - start_computation), iblock, top)
             #print()
 
-        field_diff = 10000
+        field_diff = 5000
         if top - start_of_field > 2 * field_diff:
             #breakpoint()
             new_field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
             new_field[:field_size - field_diff] = field[field_diff:]
-            #display_field(field, start_of_field, top)
+            display_field(field, start_of_field, top)
             field = new_field
             start_of_field += field_diff
             #print('*' * 80)
-            #display_field(field, start_of_field, top)
+            display_field(field, start_of_field, top)
 
-    for row in range(field.shape[0] - 1, 0, -1):
-        if field[row, :].any():
+        display_field(field, start_of_field, top)
+        breakpoint()
+
+    for row in range(len(field) - 1, 0, -1):
+        if any(field[row]):
             print("part1:", top)
             break
 
@@ -320,4 +335,4 @@ def day17(filename):
 logging.getLogger().setLevel(logging.WARN)
 
 day17(examples("17"))
-day17(inputs("17"))
+#day17(inputs("17"))
