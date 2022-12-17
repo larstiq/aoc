@@ -248,19 +248,19 @@ def day17(filename):
     start_computation = time.time()
 
     widths = [4, 3, 3, 1, 2]
-    #for iblock in range(0, 1000000000000):
+    for iblock in range(0, 1000000000000):
         #for iblock in range(0, 2022):
-    for iblock in range(0, 20):
+        #for iblock in range(0, 20):
         pos = 2
 
-        if iblock == 1:
-            breakpoint()
+        #if iblock == 1:
+            #    breakpoint()
 
         shape = iblock % 5
         width = widths[shape]
 
         moves = more_itertools.take(4, jetpattern)
-        print("moves for iblock", moves, iblock)
+        #print("moves for iblock", moves, iblock)
         for move in moves:
             pos = min(7 - width, max(0, pos + move))
 
@@ -269,9 +269,9 @@ def day17(filename):
 
         while not block.stopped:
             move = next(jetpattern)
-            print("another move", move, "for iblock", iblock, "at", block.td)
-            if block.td < 0:
-                breakpoint()
+            #print("another move", move, "for iblock", iblock, "at", block.td)
+            #if block.td < 0:
+                #breakpoint()
 
             # Idea 1: we don't need to do the left and right shifting at least
             # until we're at risk of collision, and then we can just sum them
@@ -311,21 +311,21 @@ def day17(filename):
             #breakpoint()
             new_field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
             new_field[:field_size - field_diff] = field[field_diff:]
-            display_field(field, start_of_field, top)
+            #display_field(field, start_of_field, top)
             field = new_field
             start_of_field += field_diff
             #print('*' * 80)
-            display_field(field, start_of_field, top)
+            #display_field(field, start_of_field, top)
 
-        display_field(field, start_of_field, top)
-        breakpoint()
+        #display_field(field, start_of_field, top)
+        #breakpoint()
 
     for row in range(len(field) - 1, 0, -1):
         if any(field[row]):
             print("part1:", top)
             break
 
-    #breakpoint()
+    breakpoint()
 
 
 
@@ -335,4 +335,4 @@ def day17(filename):
 logging.getLogger().setLevel(logging.WARN)
 
 day17(examples("17"))
-#day17(inputs("17"))
+day17(inputs("17"))
