@@ -80,7 +80,7 @@ class Block:
         #      #
         elif shape == 1:
             # Are the cells right of the edge free?
-            if (field[td][self.lr + 2] == False and
+            if (field[td + 0][self.lr + 2] == False and
                 field[td + 1][self.lr + 3] == False and
                 field[td + 2][self.lr + 2] == False):
                 self.lr += 1
@@ -90,7 +90,7 @@ class Block:
         #       #
         #     ###
         elif shape == 2:
-            if (field[td][self.lr + 3] == False and
+            if (field[td + 0][self.lr + 3] == False and
                 field[td + 1][self.lr + 3] == False and
                 field[td + 2][self.lr + 3] == False):
                 self.lr += 1
@@ -100,7 +100,7 @@ class Block:
         #       #
         #       #
         elif shape == 3:
-            if (field[td][self.lr + 1] == False and
+            if (field[td + 0][self.lr + 1] == False and
                 field[td + 1][self.lr + 1] == False and
                 field[td + 2][self.lr + 1] == False and
                 field[td + 3][self.lr + 1] == False):
@@ -111,7 +111,7 @@ class Block:
         #      ##
         #      ##
         elif shape == 4:
-            if (field[td][self.lr + 2] == False and
+            if (field[td + 0][self.lr + 2] == False and
                 field[td + 1][self.lr + 2] == False):
                 self.lr += 1
 
