@@ -235,7 +235,7 @@ def day17(filename):
         jetpattern = itertools.cycle(data)
 
     top = 0
-    field_diff = 2**6
+    field_diff = 2**8
     field_size = 4 * field_diff
     field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
     # Absolute zero
@@ -244,8 +244,8 @@ def day17(filename):
     start_computation = time.time()
 
     widths = [4, 3, 3, 1, 2]
-    #for iblock in range(0, 1000000000000):
-    for iblock in range(0, 2022):
+    for iblock in range(0, 1000000000000):
+    #for iblock in range(0, 2022):
     #for iblock in range(0, 200000):
         pos = 2
 
