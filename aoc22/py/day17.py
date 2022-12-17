@@ -119,16 +119,14 @@ class Block:
                 self.lr += 1
 
 
-    def down(self, tops, field):
+    def down(self, field):
         if self.stopped:
             return
 
-        if self.td > max(tops) + 1:
-            self.td -= 1
+        if self.td == 1:
+            self.stopped = True
             return
 
-
-        # Now it depends on the shape
         shape = self.shape
         if shape == 3:
             if field[self.td - 1, self.lr] == True:
@@ -136,29 +134,37 @@ class Block:
             else:
                 self.td -= 1
 
-        if shape == 4:
-            if self.td - 1 in (tops[self.lr], tops[self.lr + 1]):
-                self.stopped = True
-            else:
+        elif shape == 4:
+            if (field[self.td - 1, self.lr] == False and
+                field[self.td - 1, self.lr + 1] == False):
                 self.td -= 1
+            else:
+                self.stopped = True
 
-        if shape == 2:
-            if self.td - 1 in tops[self.lr:self.lr + 3]:
-                self.stopped = True
-            else:
+        elif shape == 2:
+            if (field[self.td - 1, self.lr] == False and
+                field[self.td - 1, self.lr + 1] == False and
+                field[self.td - 1, self.lr + 2] == False):
                 self.td -= 1
+            else:
+                self.stopped = True
 
-        if shape == 1:
-            if self.td - 1 == tops[self.lr + 1] or (self.td + 1) in (tops[self.lr], tops[self.lr + 2]):
-                self.stopped = True
-            else:
+        elif shape == 1:
+            if (field[self.td , self.lr] == False and
+                field[self.td - 1, self.lr + 1] == False and
+                field[self.td, self.lr + 2] == False):
                 self.td -= 1
+            else:
+                self.stopped = True
 
-        if shape == 0:
-            if self.td - 1 in tops[self.lr:self.lr + 41]:
-                self.stopped = True
-            else:
+        elif shape == 0:
+            if (field[self.td - 1, self.lr] == False and
+                field[self.td - 1, self.lr + 1] == False and
+                field[self.td - 1, self.lr + 2] == False and
+                field[self.td - 1, self.lr + 3] == False):
                 self.td -= 1
+            else:
+                self.stopped = True
 
     def update_tops(self, tops, field):
         shape = self.shape
@@ -229,7 +235,7 @@ def day17(filename):
                 block.right(field)
 
             # down
-            block.down(tops, field)
+            block.down(field)
             logging.debug("Jet %s pattern %s : %s, %s", jet, jetpattern[jet], block, tops) 
         
         block.update_tops(tops, field)
