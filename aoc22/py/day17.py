@@ -14,6 +14,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 
 import numpy as np
+import time
 
 
 @dataclass
@@ -23,42 +24,46 @@ class Block:
     shape: int
     stopped: bool
 
-    def left(self, field):
+    def left(self, start_of_field, field):
         # This works fine for the wall but not for blocks, bleh
         if self.lr == 0:
             return
 
         shape = self.shape
+
+
+        td = self.td - start_of_field
         if shape == 0:
             # Is the cell left to us free?
-            if field[self.td, self.lr - 1] == False:
+            if field[td, self.lr - 1] == False:
                 self.lr -= 1
         elif shape == 1:
             # Are the cells left of the edge free?
-            if (field[self.td, self.lr] == False and
-                field[self.td + 1, self.lr - 1] == False and
-                field[self.td + 2, self.lr] == False):
+            if (field[td, self.lr] == False and
+                field[td + 1, self.lr - 1] == False and
+                field[td + 2, self.lr] == False):
                 self.lr -= 1
         elif shape == 2:
             #breakpoint()
-            if (field[self.td, self.lr - 1] == False and
-                field[self.td + 1, self.lr + 1] == False and
-                field[self.td + 2, self.lr + 1] == False):
+            if (field[td, self.lr - 1] == False and
+                field[td + 1, self.lr + 1] == False and
+                field[td + 2, self.lr + 1] == False):
                 self.lr -= 1
         elif shape == 3:
-            if (field[self.td, self.lr - 1] == False and
-                field[self.td + 1, self.lr - 1] == False and
-                field[self.td + 2, self.lr - 1] == False and
-                field[self.td + 3, self.lr - 1] == False):
+            if (field[td, self.lr - 1] == False and
+                field[td + 1, self.lr - 1] == False and
+                field[td + 2, self.lr - 1] == False and
+                field[td + 3, self.lr - 1] == False):
                 self.lr -= 1
         elif shape == 4:
-            if (field[self.td, self.lr - 1] == False and
-                field[self.td + 1, self.lr - 1] == False):
+            if (field[td, self.lr - 1] == False and
+                field[td + 1, self.lr - 1] == False):
                 self.lr -= 1
 
 
-    def right(self, field):
+    def right(self, start_of_field, field):
         shape = self.shape
+        td = self.td - start_of_field
 
         # 0123456
         #    ####
@@ -66,7 +71,7 @@ class Block:
             if self.lr == 3:
                 return
             # Is the cell left to us free?
-            if field[self.td, self.lr + 4] == False:
+            if field[td, self.lr + 4] == False:
                 self.lr += 1
 
         # 0123456
@@ -77,9 +82,9 @@ class Block:
             if self.lr == 4:
                 return
             # Are the cells right of the edge free?
-            if (field[self.td, self.lr + 2] == False and
-                field[self.td + 1, self.lr + 3] == False and
-                field[self.td + 2, self.lr + 2] == False):
+            if (field[td, self.lr + 2] == False and
+                field[td + 1, self.lr + 3] == False and
+                field[td + 2, self.lr + 2] == False):
                 self.lr += 1
 
         # 0123456
@@ -89,9 +94,9 @@ class Block:
         elif shape == 2:
             if self.lr == 4:
                 return
-            if (field[self.td, self.lr + 3] == False and
-                field[self.td + 1, self.lr + 3] == False and
-                field[self.td + 2, self.lr + 3] == False):
+            if (field[td, self.lr + 3] == False and
+                field[td + 1, self.lr + 3] == False and
+                field[td + 2, self.lr + 3] == False):
                 self.lr += 1
         # 0123456
         #       #
@@ -101,10 +106,10 @@ class Block:
         elif shape == 3:
             if self.lr == 6:
                 return
-            if (field[self.td, self.lr + 1] == False and
-                field[self.td + 1, self.lr + 1] == False and
-                field[self.td + 2, self.lr + 1] == False and
-                field[self.td + 3, self.lr + 1] == False):
+            if (field[td, self.lr + 1] == False and
+                field[td + 1, self.lr + 1] == False and
+                field[td + 2, self.lr + 1] == False and
+                field[td + 3, self.lr + 1] == False):
                 self.lr += 1
 
         # 0123456
@@ -114,12 +119,12 @@ class Block:
         elif shape == 4:
             if self.lr == 5:
                 return
-            if (field[self.td, self.lr + 2] == False and
-                field[self.td + 1, self.lr + 2] == False):
+            if (field[td, self.lr + 2] == False and
+                field[td + 1, self.lr + 2] == False):
                 self.lr += 1
 
 
-    def down(self, field):
+    def down(self, start_of_field, field):
         if self.stopped:
             return
 
@@ -127,65 +132,68 @@ class Block:
             self.stopped = True
             return
 
+        td = self.td - start_of_field
+
         shape = self.shape
         if shape == 3:
-            if field[self.td - 1, self.lr] == True:
+            if field[td - 1, self.lr] == True:
                 self.stopped = True
             else:
                 self.td -= 1
 
         elif shape == 4:
-            if (field[self.td - 1, self.lr] == False and
-                field[self.td - 1, self.lr + 1] == False):
+            if (field[td - 1, self.lr] == False and
+                field[td - 1, self.lr + 1] == False):
                 self.td -= 1
             else:
                 self.stopped = True
 
         elif shape == 2:
-            if (field[self.td - 1, self.lr] == False and
-                field[self.td - 1, self.lr + 1] == False and
-                field[self.td - 1, self.lr + 2] == False):
+            if (field[td - 1, self.lr] == False and
+                field[td - 1, self.lr + 1] == False and
+                field[td - 1, self.lr + 2] == False):
                 self.td -= 1
             else:
                 self.stopped = True
 
         elif shape == 1:
-            if (field[self.td , self.lr] == False and
-                field[self.td - 1, self.lr + 1] == False and
-                field[self.td, self.lr + 2] == False):
+            if (field[td , self.lr] == False and
+                field[td - 1, self.lr + 1] == False and
+                field[td, self.lr + 2] == False):
                 self.td -= 1
             else:
                 self.stopped = True
 
         elif shape == 0:
-            if (field[self.td - 1, self.lr] == False and
-                field[self.td - 1, self.lr + 1] == False and
-                field[self.td - 1, self.lr + 2] == False and
-                field[self.td - 1, self.lr + 3] == False):
+            if (field[td - 1, self.lr] == False and
+                field[td - 1, self.lr + 1] == False and
+                field[td - 1, self.lr + 2] == False and
+                field[td - 1, self.lr + 3] == False):
                 self.td -= 1
             else:
                 self.stopped = True
 
-    def update_tops(self, field):
+    def update_tops(self, start_of_field, field):
         shape = self.shape
+        td = self.td - start_of_field
         if shape == 4:
-            field[self.td:self.td + 2, self.lr:self.lr + 2] = True
+            field[td:td + 2, self.lr:self.lr + 2] = True
 
         if shape == 3:
-            field[self.td:self.td + 4, self.lr] = True
+            field[td:td + 4, self.lr] = True
 
         if shape == 2:
-            field[self.td, self.lr:self.lr + 3] = True
-            field[self.td + 1, self.lr + 2] = True
-            field[self.td + 2, self.lr + 2] = True
+            field[td, self.lr:self.lr + 3] = True
+            field[td + 1, self.lr + 2] = True
+            field[td + 2, self.lr + 2] = True
 
         if shape == 1:
-            field[self.td, self.lr + 1] = True
-            field[self.td + 1, self.lr:self.lr + 3] = True
-            field[self.td + 2, self.lr + 1] = True
+            field[td, self.lr + 1] = True
+            field[td + 1, self.lr:self.lr + 3] = True
+            field[td + 2, self.lr + 1] = True
 
         if shape == 0:
-            field[self.td, self.lr:self.lr + 4] = True
+            field[td, self.lr:self.lr + 4] = True
 
     def top(self):
         shape = self.shape
@@ -206,9 +214,11 @@ class Block:
 
 
 
-def display_field(field):
-    for row in range(field.shape[0] - 1, 0, -1):
-        print("".join("#" if cell else "." for cell in field[row, :]))
+def display_field(field, start, top):
+
+    dis_start = min(field.shape[0] - 1, top - start)
+    for row in range(dis_start, 0, -1):
+        print(f"{start + row:<5}", "".join("#" if cell else "." for cell in field[row, :]))
 
 def day17(filename):
     print()
@@ -221,36 +231,56 @@ def day17(filename):
 
 
     top = 0
-    field = np.zeros((5000, 7), dtype=bool)
-    for iblock in range(0, 2022):
+    field_size = 50000
+    field = np.zeros((field_size, 7), dtype=bool)
+    start_of_field = 0
+    start_computation = time.time()
+    for iblock in range(0, 1000000000000):
+        #for iblock in range(0, 2022):
         block = Block(lr=2, td=top + 4, shape=iblock % 5, stopped=False)
         while not block.stopped:
             jet += 1
             jet %= len(jetpattern)
 
+            # Idea 1: we don't need to do the left and right shifting at least
+            # until we're at risk of collision, and then we can just sum them
+            # up for a total left/right shift
+            #
+            # When is that? 
             if jetpattern[jet] == '<':
-                block.left(field)
+                block.left(start_of_field, field)
             else:
-                block.right(field)
+                block.right(start_of_field, field)
 
             # down
-            block.down(field)
+            block.down(start_of_field, field)
             logging.debug("Jet %s pattern %s : %s, %s", jet, jetpattern[jet], block, top) 
         
-        block.update_tops(field)
+        block.update_tops(start_of_field, field)
         top = max(top, block.top())
-        
-        if iblock % 100 == 0:
-            display_field(field[:top + 1, :])
-            print(iblock, top)
-            print()
+
+        if iblock % 50000 == 0:
+            #display_field(field[:top + 1, :])
+            print(iblock / 1000000000000, int(time.time() - start_computation), iblock, top)
+            #print()
+
+        field_diff = 10000
+        if top - start_of_field > 2 * field_diff:
+            #breakpoint()
+            new_field = np.zeros((field_size, 7), dtype=bool)
+            new_field[:field_size - field_diff, :] = field[field_diff:, :]
+            #display_field(field, start_of_field, top)
+            field = new_field
+            start_of_field += field_diff
+            #print('*' * 80)
+            #display_field(field, start_of_field, top)
 
     for row in range(field.shape[0] - 1, 0, -1):
         if field[row, :].any():
-            print("part1:", row)
+            print("part1:", top)
             break
 
-    breakpoint()
+    #breakpoint()
 
 
 
