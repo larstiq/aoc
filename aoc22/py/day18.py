@@ -53,17 +53,28 @@ def day18(filename):
     #    connections.add_node(droplet)
 
 
-    neighbours = np.array([[[False, False, False],
-                         [False,  True, False],
-                         [False, False, False]],
+    neighbours = np.array(
+        [[[False, False, False],
+          [False,  True, False],
+          [False, False, False]],
 
-                        [[False,  True, False],
-                         [ True, False,  True],
-                         [False,  True, False]],
+         [[False,  True, False],
+          [ True, False,  True],
+          [False,  True, False]],
 
-                        [[False, False, False],
-                         [False,  True, False],
-                         [False, False, False]]])
+         [[False, False, False],
+          [False,  True, False],
+          [False, False, False]]])
+
+
+    neighdexes = np.array([
+        ( 0,  0, -1),
+        ( 0, -1,  0),
+        (-1 , 0,  0),
+        ( 0,  0,  1),
+        ( 0,  1,  0),
+        ( 1 , 0,  0),
+    ])
 
 
 
@@ -81,6 +92,31 @@ def day18(filename):
 
     print("part1:", sides)
 
+    exterior = 0
+
+    filled_up = scipy.ndimage.binary_fill_holes(grid, structure=neighbours)
+
+    #exterior = sides - 6 * (filled_up - grid).sum()
+    exterior = sides
+    #filled_connected = scipy.ndimage.correlate(filled_up, neighbours, mode='constant', cval=0)
+    for point in np.ndindex(grid.shape):
+        if (filled_up - grid)[point]:
+            #print(point)
+            #:w
+            #breakpoint()
+
+            for direc in neighdexes:
+                if grid[point[0] + direc[0], point[1] + direc[1], point[2] + direc[2]]:
+                    exterior -= 1
+            #for neighp in neighdexes + point:
+                #    print(grid[*neighp])
+            
+            #    #breakpoint()
+            #this_sides = 6 - filled_connected[point]
+            #exterior += this_sides
+            #print(point, this_sides, exterior)
+
+    print("part2:", exterior)
 
     #print(data)
 
