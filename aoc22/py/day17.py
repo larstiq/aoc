@@ -292,15 +292,17 @@ def day17(filename):
         
 
         if iblock % 500000 == 1:
-            sofar = int(time.time() - start_computation)
+            sofar = time.time() - start_computation
             #display_field(field[:top + 1, :])
 
-            print(iblock / 1000000000000, sofar, iblock, top, sofar * 1000000000000 / iblock / (3600 * 24))
+            print(iblock / 1000000000000, f"T{sofar:.2f}", f"iblock {iblock} top {top} completion", sofar * 1000000000000 / iblock / (3600 * 24))
             #breakpoint()
 
 
+
+
             #print()
-        if top % 145908 == 0:
+        if (start_of_field + top) % 145908 == 0:
             print("How many blocks did we use", iblock, top)
             # 167353 it seems
             breakpoint()
@@ -319,6 +321,15 @@ def day17(filename):
             #display_field(field, start_of_field, top)
 
             pattern = list(more_itertools.locate(field, lambda x: x == [True, True, True, True, True, False, False]))
+            breakpoint()
+
+            #(Pdb++) field[145908:2*145908] == field[145908*2:3*145908 + 1]
+            #False
+            #(Pdb++) field[:145908 + 1] == field[145908:2*145908 + 1]
+            #False
+            #(Pdb++) field[145908:2*145908 + 1] == field[2*145908:3*145908 + 1]
+            #True
+
             #print()
             #print(pattern)
             #print([r - l for (l, r) in more_itertools.pairwise(pattern)])
