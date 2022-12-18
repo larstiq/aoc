@@ -220,7 +220,7 @@ def day17(filename):
 
 
     top = 0
-    field_diff = 2**17
+    field_diff = 2**20
     field_size = 4 * field_diff
     field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
     # Absolute zero
@@ -302,12 +302,57 @@ def day17(filename):
 
 
             #print()
-        if (start_of_field + top) % 145908 == 0:
-            print("How many blocks did we use", iblock, top)
+        if (start_of_field + top) > 3 * 145908:
             # 167353 it seems
+
+            #(Pdb++) track_tops[-1]
+            #145910
+            #(Pdb++) track_tops[-2]
+            #145907
+            #(Pdb++) track_tops[93152]
+            #145910
+            #(Pdb++) track_tops[93151]
+            #145907
+
+            #(Pdb++) track_tops[186302]
+            #291818
+            #(Pdb++) track_tops[186301]
+            #291815
+            #(Pdb++) 
+
+            #(Pdb++) track_tops[279452]
+            #437726
+            #(Pdb++) track_tops[279451]
+            #437723
+            dingen = set(track_tops[i + 93150] - track_tops[i] for i in range(1000, 93150))
+
+
+            #(Pdb++) track_tops[5049] + (track_tops[5049 + 93150] - track_tops[5049]) * 10735373
+            #1566376811584
+
+
+
+
+
+
             breakpoint()
 
+        if iblock in (228532, 457112):
+            #breakpoint()
+            print("How many blocks did we use", iblock, top)
+
+        if iblock % 228580 == 0:
+            #breakpoint()
+            print("Modulo How many blocks did we use", iblock, top)
+
+
         if top > 2 * field_diff:
+
+            for j in range(4):
+                left = field[j * 145908:1 + (j + 1)*145908]
+                right = field[(j + 1) * 145908:1 + (j + 2)*145908]
+                print(len(left), len(right), left == right)
+            breakpoint()
             #breakpoint()
             # Can we do this without allocating, but a circular buffer?
             new_field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
@@ -321,7 +366,6 @@ def day17(filename):
             #display_field(field, start_of_field, top)
 
             pattern = list(more_itertools.locate(field, lambda x: x == [True, True, True, True, True, False, False]))
-            breakpoint()
 
             #(Pdb++) field[145908:2*145908] == field[145908*2:3*145908 + 1]
             #False
@@ -355,7 +399,7 @@ logging.getLogger().setLevel(logging.WARN)
 
 # 145908
 # Repating pattern of length 52
-#day17(examples("17"))
+day17(examples("17"))
 # 
 # 2702
 day17(inputs("17"))
