@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 
-from utils import inputs, examples
-
-import functools
-import json
+import itertools
 import logging
 import math
+from dataclasses import dataclass
 
 import more_itertools
 
-from collections import defaultdict
-from dataclasses import dataclass
-
-import time
+from utils import examples, inputs
 
 
 @dataclass
@@ -29,7 +24,6 @@ class Block:
 
         shape = self.shape
 
-
         td = self.td
         if shape == 0:
             # Is the cell left to us free?
@@ -37,29 +31,35 @@ class Block:
                 return
         elif shape == 1:
             # Are the cells left of the edge free?
-            if (field[td + 0][self.lr + 0] == True or
+            if (
+                field[td + 0][self.lr + 0] == True or
                 field[td + 1][self.lr - 1] == True or
-                field[td + 2][self.lr + 0] == True):
+                field[td + 2][self.lr + 0] == True
+            ):
                 return
         elif shape == 2:
-            #breakpoint()
-            if (field[td + 0][self.lr - 1] == True or
+            if (
+                field[td + 0][self.lr - 1] == True or
                 field[td + 1][self.lr + 1] == True or
-                field[td + 2][self.lr + 1] == True):
+                field[td + 2][self.lr + 1] == True
+            ):
                 return
         elif shape == 3:
-            if (field[td + 0][self.lr - 1] == True or
+            if (
+                field[td + 0][self.lr - 1] == True or
                 field[td + 1][self.lr - 1] == True or
                 field[td + 2][self.lr - 1] == True or
-                field[td + 3][self.lr - 1] == True):
+                field[td + 3][self.lr - 1] == True
+            ):
                 return
         elif shape == 4:
-            if (field[td + 0][self.lr - 1] == True or
-                field[td + 1][self.lr - 1] == True):
+            if (
+                field[td + 0][self.lr - 1] == True or
+                field[td + 1][self.lr - 1] == True
+            ):
                 return
 
         self.lr -= 1
-
 
     def right(self, field):
         shape = self.shape
@@ -82,9 +82,11 @@ class Block:
         #      #
         elif shape == 1:
             # Are the cells right of the edge free?
-            if (field[td + 0][self.lr + 2] == False and
+            if (
+                field[td + 0][self.lr + 2] == False and
                 field[td + 1][self.lr + 3] == False and
-                field[td + 2][self.lr + 2] == False):
+                field[td + 2][self.lr + 2] == False
+            ):
                 self.lr += 1
 
         # 0123456
@@ -92,9 +94,11 @@ class Block:
         #       #
         #     ###
         elif shape == 2:
-            if (field[td + 0][self.lr + 3] == False and
+            if (
+                field[td + 0][self.lr + 3] == False and
                 field[td + 1][self.lr + 3] == False and
-                field[td + 2][self.lr + 3] == False):
+                field[td + 2][self.lr + 3] == False
+            ):
                 self.lr += 1
         # 0123456
         #       #
@@ -102,10 +106,12 @@ class Block:
         #       #
         #       #
         elif shape == 3:
-            if (field[td + 0][self.lr + 1] == False and
+            if (
+                field[td + 0][self.lr + 1] == False and
                 field[td + 1][self.lr + 1] == False and
                 field[td + 2][self.lr + 1] == False and
-                field[td + 3][self.lr + 1] == False):
+                field[td + 3][self.lr + 1] == False
+            ):
                 self.lr += 1
 
         # 0123456
@@ -113,10 +119,11 @@ class Block:
         #      ##
         #      ##
         elif shape == 4:
-            if (field[td + 0][self.lr + 2] == False and
-                field[td + 1][self.lr + 2] == False):
+            if (
+                field[td + 0][self.lr + 2] == False and
+                field[td + 1][self.lr + 2] == False
+            ):
                 self.lr += 1
-
 
     def down(self, field):
         if self.stopped:
@@ -127,9 +134,6 @@ class Block:
             return
 
         td = self.td
-        if td < 0:
-            breakpoint()
-
         shape = self.shape
         if shape == 3:
             if field[td - 1][self.lr] == True:
@@ -137,34 +141,42 @@ class Block:
                 return
 
         elif shape == 4:
-            if (field[td - 1][self.lr + 0] == True or
-                field[td - 1][self.lr + 1] == True):
+            if (
+                field[td - 1][self.lr + 0] == True or
+                field[td - 1][self.lr + 1] == True
+            ):
                 self.stopped = True
                 return
 
         elif shape == 2:
-            if (field[td - 1][self.lr + 0] == True or
+            if (
+                field[td - 1][self.lr + 0] == True or
                 field[td - 1][self.lr + 1] == True or
-                field[td - 1][self.lr + 2] == True):
+                field[td - 1][self.lr + 2] == True
+            ):
                 self.stopped = True
                 return
 
         #      #
         #     ###
         #  td  #
-        #     012 
+        #     012
         elif shape == 1:
-            if (field[td + 0][self.lr + 0] == True or
+            if (
+                field[td + 0][self.lr + 0] == True or
                 field[td - 1][self.lr + 1] == True or
-                field[td + 0][self.lr + 2] == True):
+                field[td + 0][self.lr + 2] == True
+            ):
                 self.stopped = True
                 return
 
         elif shape == 0:
-            if (field[td - 1][self.lr + 0] == True or
+            if (
+                field[td - 1][self.lr + 0] == True or
                 field[td - 1][self.lr + 1] == True or
                 field[td - 1][self.lr + 2] == True or
-                field[td - 1][self.lr + 3] == True):
+                field[td - 1][self.lr + 3] == True
+            ):
                 self.stopped = True
                 return
 
@@ -174,8 +186,8 @@ class Block:
         shape = self.shape
         td = self.td
         if shape == 4:
-            field[td + 0][self.lr:self.lr + 2] = True, True
-            field[td + 1][self.lr:self.lr + 2] = True, True
+            field[td + 0][self.lr : self.lr + 2] = True, True
+            field[td + 1][self.lr : self.lr + 2] = True, True
 
         if shape == 3:
             field[td + 0][self.lr] = True
@@ -184,18 +196,17 @@ class Block:
             field[td + 3][self.lr] = True
 
         if shape == 2:
-            field[td + 0][self.lr:self.lr + 3] = True, True, True
+            field[td + 0][self.lr : self.lr + 3] = True, True, True
             field[td + 1][self.lr + 2] = True
             field[td + 2][self.lr + 2] = True
 
         if shape == 1:
             field[td + 0][self.lr + 1] = True
-            field[td + 1][self.lr:self.lr + 3] = True, True, True
+            field[td + 1][self.lr : self.lr + 3] = True, True, True
             field[td + 2][self.lr + 1] = True
 
         if shape == 0:
-            field[td][self.lr:self.lr + 4] = True, True, True, True
-
+            field[td][self.lr : self.lr + 4] = True, True, True, True
 
 
 def display_field(field, start, top):
@@ -205,47 +216,36 @@ def display_field(field, start, top):
         print(f"{start + row:<5}", "".join("#" if cell else "." for cell in field[row]))
 
 
-
-import itertools
-
 def day17(filename):
     print()
     print(filename)
 
     with open(filename) as puzzlein:
         gusts = puzzlein.read().strip()
-        data = [-1 if j == '<' else 1 for j in gusts]
+        data = [-1 if j == "<" else 1 for j in gusts]
         jetpattern = itertools.cycle(data)
 
-
-
     top = 0
-    field_diff = 2**20
-    field_size = 4 * field_diff
-    field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
-    # Absolute zero
-    field[0] = [True, True, True, True, True, True, True]
-    start_of_field = 0
-    start_computation = time.time()
 
     widths = [4, 3, 3, 1, 2]
     tops = [0, 2, 2, 3, 1]
 
-    track_tops = []
-    for iblock in range(0, 1000000000000):
-    #for iblock in range(0, 2022):
-    #for iblock in range(0, 200000):
-        pos = 2
+    max_cycle_length = len(data) * 5
+    field_size = 4 * max(2022, max_cycle_length)
+    field = [
+        [False, False, False, False, False, False, False] for _ in range(field_size)
+    ]
+    # Absolute zero
+    field[0] = [True, True, True, True, True, True, True]
 
-        #if iblock == 13:
-            #breakpoint()
-            #    pass
+    track_tops = []
+    for iblock in range(0, max(2022, max_cycle_length)):
+        pos = 2
 
         shape = iblock % 5
         width = widths[shape]
 
         moves = more_itertools.take(4, jetpattern)
-        #print("moves for iblock", moves, iblock)
         for move in moves:
             pos = min(7 - width, max(0, pos + move))
 
@@ -255,151 +255,37 @@ def day17(filename):
         while not block.stopped:
             move = next(jetpattern)
 
-
-            #print("another move", move, "for iblock", iblock, "at", block.td)
-            #breakpoint()
-            #if block.td < 0:
-                #breakpoint()
-
-            # Idea 1: we don't need to do the left and right shifting at least
-            # until we're at risk of collision, and then we can just sum them
-            # up for a total left/right shift
-            #
-            # When is that?  At the very least we can roll up the first 4 steps that it appears above the rest
-            # 
-            # Unfortunately we need to deal with the clamping behaviour, can't just pay attention to the sign.
-            # 
-            # And we do need to know the width of the block to know when to clamp, and that a reversal then goes back.
-            #
-            # Position +- 1
-            # pos = newpos + move
-
-            # if pos + move is negative, return 0
-            # if pos + move > 7 - width it means the new position would stick the right end outside, not good either
-
             if move == -1:
                 block.left(field)
             else:
                 block.right(field)
 
-            # down
             block.down(field)
-            #logging.debug("Jet %s pattern %s : %s, %s", jet, move, block, top) 
-        
+
         block.update_tops(field)
         top = max(top, block.td + tops[shape])
-        track_tops.append(start_of_field + top)
-        
+        track_tops.append(top)
 
-        if iblock % 500000 == 1:
-            sofar = time.time() - start_computation
-            #display_field(field[:top + 1, :])
+    print("part1:", track_tops[2022 - 1])
 
-            print(iblock / 1000000000000, f"T{sofar:.2f}", f"iblock {iblock} top {top} completion", sofar * 1000000000000 / iblock / (3600 * 24))
-            #breakpoint()
+    differences = [r - l for (l, r) in more_itertools.pairwise(track_tops[500:])]
+    for seq_len in range(2, math.ceil(len(differences) / 2)):
+        if differences[0:seq_len] == differences[seq_len : 2 * seq_len]:
+            break
 
-
-
-
-            #print()
-        if (start_of_field + top) > 3 * 145908:
-            # 167353 it seems
-
-            #(Pdb++) track_tops[-1]
-            #145910
-            #(Pdb++) track_tops[-2]
-            #145907
-            #(Pdb++) track_tops[93152]
-            #145910
-            #(Pdb++) track_tops[93151]
-            #145907
-
-            #(Pdb++) track_tops[186302]
-            #291818
-            #(Pdb++) track_tops[186301]
-            #291815
-            #(Pdb++) 
-
-            #(Pdb++) track_tops[279452]
-            #437726
-            #(Pdb++) track_tops[279451]
-            #437723
-            dingen = set(track_tops[i + 93150] - track_tops[i] for i in range(1000, 93150))
-
-
-            #(Pdb++) track_tops[5049] + (track_tops[5049 + 93150] - track_tops[5049]) * 10735373
-            #1566376811584
-
-
-
-
-
-
-            breakpoint()
-
-        if iblock in (228532, 457112):
-            #breakpoint()
-            print("How many blocks did we use", iblock, top)
-
-        if iblock % 228580 == 0:
-            #breakpoint()
-            print("Modulo How many blocks did we use", iblock, top)
-
-
-        if top > 2 * field_diff:
-
-            for j in range(4):
-                left = field[j * 145908:1 + (j + 1)*145908]
-                right = field[(j + 1) * 145908:1 + (j + 2)*145908]
-                print(len(left), len(right), left == right)
-            breakpoint()
-            #breakpoint()
-            # Can we do this without allocating, but a circular buffer?
-            new_field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
-            new_field[:field_size - field_diff] = field[field_diff:]
-            #display_field(field, start_of_field, top)
-            field = new_field
-            #breakpoint()
-            start_of_field += field_diff
-            top -= field_diff
-            #print('*' * 80)
-            #display_field(field, start_of_field, top)
-
-            pattern = list(more_itertools.locate(field, lambda x: x == [True, True, True, True, True, False, False]))
-
-            #(Pdb++) field[145908:2*145908] == field[145908*2:3*145908 + 1]
-            #False
-            #(Pdb++) field[:145908 + 1] == field[145908:2*145908 + 1]
-            #False
-            #(Pdb++) field[145908:2*145908 + 1] == field[2*145908:3*145908 + 1]
-            #True
-
-            #print()
-            #print(pattern)
-            #print([r - l for (l, r) in more_itertools.pairwise(pattern)])
-            #breakpoint()
-
-        #display_field(field, start_of_field, top)
-        #breakpoint()
-        if iblock == 2021:
-
-            for row in range(len(field) - 1, 0, -1):
-                if any(field[row]):
-                    print("part1:", start_of_field + top)
-                    break
-
-    breakpoint()
-
-
-
-
+    # It will take days to run the simulation as far as the elepehants want,
+    # but the blocks repeat (there are 5 blocks we cycle through and the gusts cycle too)
+    equiv_class = (1000000000000 - 1) % seq_len
+    equiv_value = track_tops[equiv_class]
+    blocks_per_cycle = track_tops[equiv_class + seq_len] - equiv_value
+    total_blocks = (
+        equiv_value + blocks_per_cycle * ((1000000000000 - 1) - equiv_class) // seq_len
+    )
+    print("sequence cycle length:", seq_len)
+    print("part2:", total_blocks)
 
 
 logging.getLogger().setLevel(logging.WARN)
 
-# 145908
-# Repating pattern of length 52
 day17(examples("17"))
-# 
-# 2702
 day17(inputs("17"))
