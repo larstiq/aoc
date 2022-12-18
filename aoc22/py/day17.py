@@ -217,8 +217,10 @@ def day17(filename):
         data = [-1 if j == '<' else 1 for j in gusts]
         jetpattern = itertools.cycle(data)
 
+
+
     top = 0
-    field_diff = 2**8
+    field_diff = 2**17
     field_size = 4 * field_diff
     field = [[False, False, False, False, False, False, False] for _ in range(field_size)]
     # Absolute zero
@@ -228,6 +230,8 @@ def day17(filename):
 
     widths = [4, 3, 3, 1, 2]
     tops = [0, 2, 2, 3, 1]
+
+    track_tops = []
     for iblock in range(0, 1000000000000):
     #for iblock in range(0, 2022):
     #for iblock in range(0, 200000):
@@ -284,13 +288,22 @@ def day17(filename):
         
         block.update_tops(field)
         top = max(top, block.td + tops[shape])
+        track_tops.append(start_of_field + top)
+        
 
         if iblock % 500000 == 1:
             sofar = int(time.time() - start_computation)
             #display_field(field[:top + 1, :])
 
             print(iblock / 1000000000000, sofar, iblock, top, sofar * 1000000000000 / iblock / (3600 * 24))
+            #breakpoint()
+
+
             #print()
+        if top % 145908 == 0:
+            print("How many blocks did we use", iblock, top)
+            # 167353 it seems
+            breakpoint()
 
         if top > 2 * field_diff:
             #breakpoint()
@@ -304,6 +317,12 @@ def day17(filename):
             top -= field_diff
             #print('*' * 80)
             #display_field(field, start_of_field, top)
+
+            pattern = list(more_itertools.locate(field, lambda x: x == [True, True, True, True, True, False, False]))
+            #print()
+            #print(pattern)
+            #print([r - l for (l, r) in more_itertools.pairwise(pattern)])
+            #breakpoint()
 
         #display_field(field, start_of_field, top)
         #breakpoint()
@@ -323,5 +342,9 @@ def day17(filename):
 
 logging.getLogger().setLevel(logging.WARN)
 
-day17(examples("17"))
+# 145908
+# Repating pattern of length 52
+#day17(examples("17"))
+# 
+# 2702
 day17(inputs("17"))
