@@ -38,9 +38,9 @@ def day19(filename):
         bid, ore, clay, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian = recipe
         states = { (1, 0, 0, 0): [[0, 0, 0, 0]] }
         max_geode = -1
-        for minute in range(1, 32 + 1):
+        for minute in range(1, 24 + 1):
             prev_max = max_geode
-            minutes_left = 32 - minute
+            minutes_left = 24 - minute
             print("Minute", minute, "for", bid, "starting with", sum(len(v) for v in states.values()), "states")
 
             next_states = defaultdict(list)
@@ -88,7 +88,9 @@ def day19(filename):
             # TODO: if either robots or resources are the same as another option, can take the lexically greatest option
             #
             #       Basically we're looking at a surface in (robot, resource) space. 
-            states = defaultdict(list)
+            state_to_robot = defaultdict(list)
+            im_states = defaultdict(list)
+
             if len(next_states) == 1:
                 print(next_states)
 
@@ -96,6 +98,7 @@ def day19(filename):
                 cands = next_states[next_robots]
 
                 for ix, next_resources in enumerate(cands):
+                    state_to_robot[next_resources].append(next_robots)
 
                     if max_geode - next_resources[-1] > minutes_left * next_resources[-1] + (minutes_left + 1)*minutes_left / 2:
                         #print("Skipping", next_resources, "since", max_geode, "unbeatable at", minute)
@@ -113,8 +116,33 @@ def day19(filename):
                         else:
                             break
                     else:
-                        states[next_robots].append(next_resources)
-                
+                        im_states[next_robots].append(next_resources)
+
+
+            states = defaultdict(list)
+            #all_resources = sum(len(v) for v in states.values())
+            #import functools
+            #dedup_resources = len(functools.reduce(lambda x, y: x | set(y), states.values(), set()))
+            #if all_resources != dedup_resources:
+            #    print(all_resources - dedup_resources)
+            #    breakpoint()
+
+            for state, robots_list in state_to_robot.items():
+                for jx, r1 in enumerate(robots_list):
+                    for r2 in robots_list[jx + 1:]:
+                        if (
+                            r1[0] > r2[0] or 
+                            r1[1] > r2[1] or 
+                            r1[2] > r2[2] or 
+                            r1[3] > r2[3]
+                        ):
+                            continue
+                        else:
+                            break
+                    else:
+                        if state in im_states[r1]:
+                            states[r1].append(state)
+
         ql = bid * max_geode
         qualities.append(ql)
         mgeodes.append(max_geode)
