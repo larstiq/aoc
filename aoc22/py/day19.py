@@ -88,6 +88,19 @@ def day19(filename):
 
 
             print("Starting pruning", time.time() - start_time)
+
+            if minute == 31:
+                max_last_geodes = -1
+                cand = None
+                for (robots, resources) in next_states.items():
+                    for rx in resources:
+                        if rx[-1] + robots[-1] > max_last_geodes:
+                            cand = (robots, rx)
+                            max_last_geodes = rx[-1] + robots[-1]
+
+                print("Last minute:", max_last_geodes, cand)
+                breakpoint()
+                    
             # TODO: if either robots or resources are the same as another option, can take the lexically greatest option
             #
             #       Basically we're looking at a surface in (robot, resource) space. 
