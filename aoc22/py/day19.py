@@ -99,7 +99,7 @@ def day19(filename):
                             max_last_geodes = rx[-1] + robots[-1]
 
                 print("Last minute:", max_last_geodes, cand)
-                breakpoint()
+                break
                     
             # TODO: if either robots or resources are the same as another option, can take the lexically greatest option
             #
@@ -185,5 +185,5 @@ def day19(filename):
     breakpoint()
 
 
-day19(examples("19"))
-#day19(inputs("19"))
+#day19(examples("19"))
+day19(inputs("19"))
