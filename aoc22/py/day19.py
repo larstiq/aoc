@@ -3,6 +3,7 @@
 from utils import examples, inputs
 
 from collections import defaultdict
+import time
 
 import re
 
@@ -34,16 +35,17 @@ def day19(filename):
 
     qualities = []
     mgeodes = []
+    start_time = time.time()
     for recipe in data[:3]:
         bid, ore, clay, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian = recipe
-        states = { (1, 0, 0, 0): [[0, 0, 0, 0]] }
+        states = { (1, 0, 0, 0): {(0, 0, 0, 0)} }
         max_geode = -1
-        for minute in range(1, 24 + 1):
+        for minute in range(1, 32 + 1):
             prev_max = max_geode
-            minutes_left = 24 - minute
-            print("Minute", minute, "for", bid, "starting with", sum(len(v) for v in states.values()), "states")
+            minutes_left = 32 - minute
+            print("Minute", minute, "for", bid, "starting with", sum(len(v) for v in states.values()), f"states over {len(states)} robots", time.time() - start_time)
 
-            next_states = defaultdict(list)
+            next_states = defaultdict(set)
 
             for (robots, resources_list) in states.items():
                 for resources in resources_list:
@@ -81,26 +83,31 @@ def day19(filename):
                             next_resources[0] -= ore
 
                         max_geode = max(max_geode, next_resources[-1])
-                            
-                        next_states[tuple(next_robots)].append(tuple(next_resources))
 
-            
+                        next_states[tuple(next_robots)].add(tuple(next_resources))
+
+
+            print("Starting pruning", time.time() - start_time)
             # TODO: if either robots or resources are the same as another option, can take the lexically greatest option
             #
             #       Basically we're looking at a surface in (robot, resource) space. 
-            state_to_robot = defaultdict(list)
-            im_states = defaultdict(list)
+            state_to_robot = defaultdict(set)
+            im_states = defaultdict(set)
 
             if len(next_states) == 1:
                 print(next_states)
 
+
+            pruned_resources = 0
+            pruned_on_geodes = 0
             for next_robots in next_states:
-                cands = next_states[next_robots]
+                cands = sorted(next_states[next_robots])
 
                 for ix, next_resources in enumerate(cands):
-                    state_to_robot[next_resources].append(next_robots)
+                    state_to_robot[next_resources].add(next_robots)
 
                     if max_geode - next_resources[-1] > minutes_left * next_resources[-1] + (minutes_left + 1)*minutes_left / 2:
+                        pruned_on_geodes += 1
                         #print("Skipping", next_resources, "since", max_geode, "unbeatable at", minute)
                         continue
 
@@ -114,12 +121,15 @@ def day19(filename):
                            next_resources[3] > other_resources[3]):
                             continue
                         else:
+                            pruned_resources += 1
                             break
                     else:
-                        im_states[next_robots].append(next_resources)
+                        im_states[next_robots].add(next_resources)
 
+            print(f"   pruned {pruned_on_geodes} on geodes, {max_geode} max", time.time() - start_time)
+            print(f"   pruned {pruned_resources} resources", time.time() - start_time)
 
-            states = defaultdict(list)
+            states = defaultdict(set)
             #all_resources = sum(len(v) for v in states.values())
             #import functools
             #dedup_resources = len(functools.reduce(lambda x, y: x | set(y), states.values(), set()))
@@ -127,7 +137,9 @@ def day19(filename):
             #    print(all_resources - dedup_resources)
             #    breakpoint()
 
-            for state, robots_list in state_to_robot.items():
+            pruned_robots = 0
+            for state, robots_set in state_to_robot.items():
+                robots_list = sorted(robots_set)
                 for jx, r1 in enumerate(robots_list):
                     for r2 in robots_list[jx + 1:]:
                         if (
@@ -136,12 +148,17 @@ def day19(filename):
                             r1[2] > r2[2] or 
                             r1[3] > r2[3]
                         ):
+                            r1[0] - r2[0], r1[1] - r2[1], r1[2] - r2[2], r1[3] - r2[3]
+                            
                             continue
                         else:
+                            pruned_robots += 1
                             break
                     else:
                         if state in im_states[r1]:
-                            states[r1].append(state)
+                            states[r1].add(state)
+
+            print(f"   pruned {pruned_robots} robots", time.time() - start_time)
 
         ql = bid * max_geode
         qualities.append(ql)
