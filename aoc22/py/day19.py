@@ -13,9 +13,6 @@ def day19(filename):
     with open(filename) as puzzlein:
         data = [list(map(int, re.findall("\d+", line))) for line in puzzlein]
 
-
-
-
     # We can rewrite how much a geode costs in resources
 
     #Blueprint 1:
@@ -37,12 +34,13 @@ def day19(filename):
 
     qualities = []
     mgeodes = []
-    for recipe in data:
+    for recipe in data[:3]:
         bid, ore, clay, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian = recipe
         states = { (1, 0, 0, 0): [[0, 0, 0, 0]] }
         max_geode = -1
-        for minute in range(1, 24 + 1):
-            minutes_left = 24 - minute
+        for minute in range(1, 32 + 1):
+            prev_max = max_geode
+            minutes_left = 32 - minute
             print("Minute", minute, "for", bid, "starting with", sum(len(v) for v in states.values()), "states")
 
             next_states = defaultdict(list)
@@ -50,73 +48,72 @@ def day19(filename):
             for (robots, resources_list) in states.items():
                 for resources in resources_list:
 
-                    possible_choices = [0, 0, 0, 0]
+                    # We can always not build a robot
+                    possible_choices = [(0, 0, 0, 0)] 
                     # TODO: is it faster to construct more clay robots or more obsidian robots?
                     # TODO: munge input data to have uniform comparison in resource cost
                     if resources[0] >= geode_ore and resources[2] >= geode_obsidian:
-                        possible_choices[3] = 1
+                        possible_choices.append((0, 0, 0, 1))
                     if resources[0] >= obsidian_ore and resources[1] >= obsidian_clay:
-                        possible_choices[2] = 1
+                        possible_choices.append((0, 0, 1, 0))
                     if resources[0] >= clay:
-                        possible_choices[1] = 1
+                        possible_choices.append((0, 1, 0, 0))
                     if resources[0] >= ore:
-                        possible_choices[0] = 1
+                        possible_choices.append((1, 0, 0, 0))
 
+                    for choice in possible_choices:
+                        next_resources = list(resources)
+                        next_robots = list(robots)
 
-                    for ix, v in enumerate(possible_choices):
-                        if v:
-                            next_resources = resources.copy()
+                        for jx, V in enumerate(robots):
+                            next_resources[jx] += V
+                            next_robots[jx] += choice[jx]
 
-                            for jx, V in enumerate(robots):
-                                next_resources[jx] += V
+                        if choice == (0, 0, 0, 1):
+                            next_resources[0] -= geode_ore
+                            next_resources[2] -= geode_obsidian
+                        elif choice == (0, 0, 1, 0):
+                            next_resources[0] -= obsidian_ore
+                            next_resources[1] -= obsidian_clay
+                        elif choice == (0, 1, 0, 0):
+                            next_resources[0] -= clay
+                        elif choice == (1, 0, 0, 0):
+                            next_resources[0] -= ore
 
-                            next_robots = list(robots)
-                            next_robots[ix] += 1
-
-                            if ix == 3:
-                                next_resources[0] -= geode_ore
-                                next_resources[2] -= geode_obsidian
-                            elif ix == 2:
-                                next_resources[0] -= obsidian_ore
-                                next_resources[1] -= obsidian_clay
-                            elif ix == 1:
-                                next_resources[0] -= clay
-                            elif ix == 0:
-                                next_resources[0] -= ore
+                        max_geode = max(max_geode, next_resources[-1])
                             
-                            if next_resources[-1] > max_geode:
-                                max_geode = next_resources[-1]
-
-                            if max_geode - next_resources[-1] > minutes_left * next_resources[-1] + (minutes_left + 1)*minutes_left / 2:
-                                #print("Skipping", next_resources, "since", max_geode, "unbeatable at", minute)
-                                continue
-
-                                
-                            cands = next_states[tuple(next_robots)] 
-                            for other_resources in cands:
-                                # If there is the same amount of robots but with less resources,
-                                # don't keep that state
-                                if (next_resources[0] <= other_resources[0] and 
-                                   next_resources[1] <= other_resources[1] and 
-                                   next_resources[2] <= other_resources[2] and 
-                                   next_resources[3] <= other_resources[3]):
-                                    break
-                            else:
-                                next_states[tuple(next_robots)].append(next_resources)
-                                
-                    # Or, do nothing
-                    next_resources = resources.copy()
-
-                    if next_resources[-1] > max_geode:
-                        max_geode = next_resources[-1]
-
-                    for jx, V in enumerate(robots):
-                        next_resources[jx] += V
-                    next_states[robots].append(next_resources)
+                        next_states[tuple(next_robots)].append(tuple(next_resources))
 
             
-            states = next_states
+            # TODO: if either robots or resources are the same as another option, can take the lexically greatest option
+            #
+            #       Basically we're looking at a surface in (robot, resource) space. 
+            states = defaultdict(list)
+            if len(next_states) == 1:
+                print(next_states)
 
+            for next_robots in next_states:
+                cands = next_states[next_robots]
+
+                for ix, next_resources in enumerate(cands):
+
+                    if max_geode - next_resources[-1] > minutes_left * next_resources[-1] + (minutes_left + 1)*minutes_left / 2:
+                        #print("Skipping", next_resources, "since", max_geode, "unbeatable at", minute)
+                        continue
+
+                    for other_resources in cands[ix + 1:]:
+                        #breakpoint()
+                        # If there is the same amount of robots but with less resources,
+                        # don't keep that state
+                        if (next_resources[0] > other_resources[0] or 
+                           next_resources[1] > other_resources[1] or 
+                           next_resources[2] > other_resources[2] or 
+                           next_resources[3] > other_resources[3]):
+                            continue
+                        else:
+                            break
+                    else:
+                        states[next_robots].append(next_resources)
                 
         ql = bid * max_geode
         qualities.append(ql)
@@ -131,4 +128,4 @@ def day19(filename):
 
 
 day19(examples("19"))
-day19(inputs("19"))
+#day19(inputs("19"))
