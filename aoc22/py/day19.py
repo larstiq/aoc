@@ -35,15 +35,16 @@ def day19(filename):
     #
     # I guess we just have to try all choices
 
+    qualities = []
     for recipe in data:
         bid, ore, clay, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian = recipe
         states = { ((0, 0, 0, 0), (1, 0, 0, 0)) }
-        qualities = []
+        max_geode = -1
         for minute in range(1, 24 + 1):
+            minutes_left = 24 - minute
             print("Minute", minute, "for", bid)
 
-            next_states = defaultdict(list)
-            max_geode = -1
+            next_states = set()
 
             for (resources, robots) in states:
 
@@ -84,7 +85,11 @@ def day19(filename):
                         if next_resources[-1] > max_geode:
                             max_geode = next_resources[-1]
 
-                        next_states[tuple(next_resources), tuple(next_robots)].append((resources, robots))
+                        if max_geode - next_resources[-1] > minutes_left * rx[-1] + (minutes_left + 1)*minutes_left / 2:
+                            #print("Skipping", next_resources, "since", max_geode, "unbeatable at", minute)
+                            continue
+
+                        next_states.add((tuple(next_resources), tuple(next_robots)))
                     
 
                 # Or, do nothing
@@ -95,7 +100,7 @@ def day19(filename):
 
                 for jx, V in enumerate(robots):
                     next_resources[jx] += V
-                next_states[tuple(next_resources), robots].append((resources, robots))
+                next_states.add((tuple(next_resources), robots))
                     
 
             
@@ -115,14 +120,6 @@ def day19(filename):
                         # There is another set of resources with the same robot
                         # that has more of at least one resource and no less of the rest
                         # so we can ignore this one
-                        continue
-
-                    minutes_left = 24 - minute
-
-                    # At a rate of one robot per minute, the most we can add is
-                    #   minutes_left * robots + sum(1, minutes_left)
-                    #   minutes_left * robots + (minutes_left + 1)*minutes_left / 2
-                    if max_geode - rx[-1] > minutes_left * rx[-1] + (minutes_left + 1)*minutes_left / 2:
                         continue
 
                     states.add((rx, ro))
