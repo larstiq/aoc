@@ -22,7 +22,7 @@ def day20(filename):
 
     part1 = 0
     part2 = 0
-    data = list(np.loadtxt(filename, dtype=int))
+    data = list(811589153 * np.loadtxt(filename, dtype=int))
 
     print(data)
 
@@ -30,41 +30,47 @@ def day20(filename):
 
     N = len(positions)
 
-    touched = set()
 
-    while len(touched) < N:
-        tip = positions.popleft()
-        pos = tip
-        if tip.orig in touched:
-            positions.append(tip)
-            continue
 
-        if False and "example" in str(filename):
+    for times in range(10):
+        touched = set()
+        largest_mixed = -1
+        while len(touched) < N:
+            tip = positions.popleft()
+            pos = tip
+            if tip.orig != largest_mixed + 1:
+                positions.append(tip)
+                continue
 
-            if pos.value == 3:
-                assert [1, 2, 3, -2, -3, 0, 4] == [pos.value for pos in positions]
-                print("Good up to 3")
+            if False and "example" in str(filename):
+                if pos.value == 3:
+                    assert [1, 2, 3, -2, -3, 0, 4] == [pos.value for pos in positions]
+                    print("Good up to 3")
 
-            if pos.value == -2:
-                assert [1, 2, -2, -3, 0, 3, 4] == [pos.value for pos in positions]
-                breakpoint()
-                print("Good up to -2")
+                if pos.value == -2:
+                    assert [1, 2, -2, -3, 0, 3, 4] == [pos.value for pos in positions]
+                    breakpoint()
+                    print("Good up to -2")
+
+                if pos.value == 0:
+                    assert [1, 2, -3, 0, 3, 4, -2] == [pos.value for pos in positions]
+                    print("Good up to 0")
+
+                if pos.value == 4:
+                    breakpoint()
+
 
             if pos.value == 0:
-                assert [1, 2, -3, 0, 3, 4, -2] == [pos.value for pos in positions]
-                print("Good up to 0")
+                positions.append(pos)
+            else:
+                new_index = pos.value % (N - 1)
+                positions.insert(new_index, pos)
 
-            if pos.value == 4:
-                breakpoint()
+            largest_mixed += 1
+            touched.add(pos.orig)
+            #print(largest_mixed)
 
-
-        if pos.value == 0:
-            positions.append(pos)
-        else:
-            new_index = pos.value % (N - 1)
-            positions.insert(new_index, pos)
-
-        touched.add(pos.orig)
+        print(times, [pos.value for pos in positions])
 
     (zix, zero_pos), = [(ix, p) for (ix, p) in enumerate(positions) if p.value == 0]
 
