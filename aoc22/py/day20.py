@@ -29,9 +29,6 @@ def day20(filename):
     positions = deque([Positioned(v, ix) for ix, v in enumerate(data)])
 
     N = len(positions)
-
-
-
     for times in range(10):
         touched = set()
         largest_mixed = -1
@@ -42,24 +39,6 @@ def day20(filename):
                 positions.append(tip)
                 continue
 
-            if False and "example" in str(filename):
-                if pos.value == 3:
-                    assert [1, 2, 3, -2, -3, 0, 4] == [pos.value for pos in positions]
-                    print("Good up to 3")
-
-                if pos.value == -2:
-                    assert [1, 2, -2, -3, 0, 3, 4] == [pos.value for pos in positions]
-                    breakpoint()
-                    print("Good up to -2")
-
-                if pos.value == 0:
-                    assert [1, 2, -3, 0, 3, 4, -2] == [pos.value for pos in positions]
-                    print("Good up to 0")
-
-                if pos.value == 4:
-                    breakpoint()
-
-
             if pos.value == 0:
                 positions.append(pos)
             else:
@@ -68,7 +47,6 @@ def day20(filename):
 
             largest_mixed += 1
             touched.add(pos.orig)
-            #print(largest_mixed)
 
         print(times, [pos.value for pos in positions])
 
@@ -81,7 +59,6 @@ def day20(filename):
 
     print("part1:", enc)
     print("part2:", part2)
-    #:w breakpoint()
 
 
 day20(examples("20"))
