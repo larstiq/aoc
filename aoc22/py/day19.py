@@ -40,6 +40,7 @@ def day19(filename):
         bid, ore, clay, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian = recipe
         states = { (1, 0, 0, 0): {(0, 0, 0, 0)} }
         max_geode = -1
+        pruned_max_recipe = 0
         for minute in range(1, 32 + 1):
             prev_max = max_geode
             minutes_left = 32 - minute
@@ -48,6 +49,12 @@ def day19(filename):
             next_states = defaultdict(set)
 
             for (robots, resources_list) in states.items():
+
+                if robots[0] > max(ore, clay, obsidian_ore, geode_ore) or robots[1] > obsidian_clay or robots[2] > geode_obsidian:
+                    pruned_max_recipe += 1
+                    continue
+
+
                 for resources in resources_list:
 
                     # We can always not build a robot
@@ -87,6 +94,7 @@ def day19(filename):
                         next_states[tuple(next_robots)].add(tuple(next_resources))
 
 
+            print("Pruned max recipe", pruned_max_recipe,  time.time() - start_time)
             print("Starting pruning", time.time() - start_time)
 
             if minute == 31:
@@ -182,8 +190,8 @@ def day19(filename):
     print(data)
     print("part1:", sum(qualities))
     print("part2:", mgeodes[0] * mgeodes[1] * mgeodes[2])
-    breakpoint()
+    #:w breakpoint()
 
 
-#day19(examples("19"))
-day19(inputs("19"))
+day19(examples("19"))
+#day19(inputs("19"))
