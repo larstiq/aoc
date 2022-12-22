@@ -55,6 +55,7 @@ def day22(filename):
     # 2 left
     # 3 up
 
+    moves = []
     if password == "10R5L5R10L4R5L5\n":
         moves = [(10, 'R'), 
                  (5, "L"),
@@ -64,9 +65,23 @@ def day22(filename):
                  (5, "L"),
                  (5, "N")
                 ]
+    else:
+        breakpoint()
+        ps = 0
+        pe = 0
+        while pe < len(password.strip()):
+            if password[pe] in "LR":
+                moves.append((int(password[ps:pe]), password[pe]))
+                ps = pe + 1
+                pe += 2
+            else:
+                pe += 1
 
 
-    breakpoint()
+    if moves[-1] == (14, 'R'):
+        moves.append((39, 'N'))
+
+
     # Find first 1 in first row
     position = [0, 8]
     direction = 0
