@@ -65,7 +65,6 @@ def day22(filename):
                  (5, "N")
                 ]
     else:
-        breakpoint()
         ps = 0
         pe = 0
         while pe < len(password.strip()):
@@ -105,6 +104,7 @@ def day22(filename):
     # Identifying vertices and edges
 
     def wrap(position, direction):
+        pos, ang = None, None
         if position[0] == 0:
             # We stepped up out of 1 or 2
             if 51 <= position[1] <= 100:
@@ -184,11 +184,15 @@ def day22(filename):
             ang = 2
             pos = [151 - position[0], 50]
 
+
+        if pos is None or ang is None:
+            breakpoint()
+
         return pos, ang
 
 
     # Find first 1 in first row
-    position = [0, 8]
+    position = [1, 51]
     direction = 0
     for move in moves:
         distance, turn = move
@@ -207,44 +211,20 @@ def day22(filename):
                 elif direction == 3:
                     forwards[0] -= 1
 
-
-                # Wrap
-                if forwards[0] == -1:
-                    print("This should not happen in part2")
-                    breakpoint()
-                    forwards, direction = wrap(forwards, direction)
-                elif forwards[1] == -1:
-                    print("This should not happen in part2")
-                    breakpoint()
-                    forwards, direction = wrap(forwards, direction)
-
-                try:
-                    next_square = board[forwards[0], forwards[1]]
-                except IndexError:
-                    print("This should not happen in part2")
-                    breakpoint()
-                    # wrap around
-                    if direction == 0:
-                        forwards, direction = wrap(forwards, direction)
-                    elif direction == 1:
-                        forwards, direction = wrap(forwards, direction)
-                    elif direction == 2:
-                        forwards, direction = wrap(forwards, direction)
-                    elif direction == 3:
-                        forwards, direction = wrap(forwards, direction)
-
-                    next_square = board[forwards[0], forwards[1]]
+                next_square = board[forwards[0], forwards[1]]
+                ang = direction
+                # Wrapping around, replace next square
+                if next_square == 0:
+                    forwards, ang = wrap(forwards, direction)
+                    next_square = board[forwards[0], forwards[1]] 
                     
                 if next_square == 1:
                     stepped = True
                     position = forwards
+                    direction = ang
                     print("Stepped into", position, direction)
                 elif next_square == 2:
                     stepped = True
-
-                # Also a wrap now
-                elif next_square == 0:
-                    forwards, direction = wrap(forwards, direction)
 
         if turn == "R":
             direction = (direction + 1) % 4
