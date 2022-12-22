@@ -29,6 +29,12 @@ def day22(filename):
         ".": 1,
         "#": 2,
     }
+    revmapping = {
+        0: " ",
+        1: ".",
+        2: "#",
+    }
+
 
     raw_board = []
     with open(filename) as puzzlein:
@@ -44,9 +50,11 @@ def day22(filename):
 
     # Surround with a zero-border to avoid index-errors
     board = np.zeros(shape=(height + 2, max_width + 2), dtype=int)
+    pathboard = np.zeros(shape=(height + 2, max_width + 2), dtype=str)
     for row, line in enumerate(raw_board):
         for col, car in enumerate(raw_board[row]):
             board[row + 1, col + 1] = car
+            pathboard[row + 1, col + 1] = revmapping[car]
 
     print(board)
 
@@ -104,7 +112,7 @@ def day22(filename):
     # Identifying vertices and edges
 
 
-    def wrap_example(positon, direction):
+    def wrap_example(position, direction):
 
         # TODO: face data with left, top, right, bottom and orientation of edges
         # TODO: encode the region instead of checking global position
@@ -154,7 +162,7 @@ def day22(filename):
                 ang = 0
                 pos = [3*size + 1 - (col - size), 2*size + 1]
         elif row == 3*size + 1:
-            if 2*size+1 <== col <= 3*size:
+            if 2*size+1 <= col <= 3*size:
                 # 5vED^2
                 ang = 3
                 pos = [2*size, size + 1 - (col - 2*size)]
@@ -164,7 +172,7 @@ def day22(filename):
                 pos = [2*size + 1 - (col - 3*size), 1]
 
         # Left-right edges
-        elif col == 1:
+        elif col == 0:
             # 2<BD^6
             ang = 3
             pos = [3*size, 3*size + 1 - (row - size)]
@@ -186,10 +194,14 @@ def day22(filename):
                 # 4>CZv6
                 ang = 1
                 pos = [2*size + 1, 4*size + 1 - (row - size)]
-        elif row == 3*size + 1:
+        elif col == 3*size + 1:
             # 6>CB<1
             ang = 2
             pos = [size+1 - (row - 2*size), 2*size]
+
+        if pos is None or ang is None:
+            breakpoint()
+            print("Bleh got soemthing wrong with", pos, ang)
 
 
         return pos, ang
@@ -287,11 +299,12 @@ def day22(filename):
     if "example" in str(filename):
         position = [1, 9]
         wrap = wrap_example
-    else
+    else:
         position = [1, 51]
         wrap = wrap_input
 
     direction = 0
+
     for move in moves:
         distance, turn = move
         
@@ -311,6 +324,8 @@ def day22(filename):
 
                 next_square = board[forwards[0], forwards[1]]
                 ang = direction
+                if forwards == [6, 13]:
+                    breakpoint()
                 # Wrapping around, replace next square
                 if next_square == 0:
                     forwards, ang = wrap(forwards, direction)
@@ -321,6 +336,10 @@ def day22(filename):
                     position = forwards
                     direction = ang
                     print("Stepped into", position, direction)
+                    pathchar = {0: '>', 1: 'v', 2: '<', 3: '^'}[direction]
+                    pathboard[position[0], position[1]] = pathchar
+                    for line in pathboard:
+                        print("".join(line))
                 elif next_square == 2:
                     # Don't change position or angle if we'd step into a wall
                     stepped = True
@@ -334,6 +353,8 @@ def day22(filename):
                 
 
 
+    print("\n".join("".join(line) for line in pathboard))
+
     #print(board, password)
     breakpoint()
     print(position, direction)
@@ -344,5 +365,5 @@ def day22(filename):
     print("part2:", part2)
 
 
-#day22(examples("22"))
-day22(inputs("22"))
+day22(examples("22"))
+#day22(inputs("22"))
