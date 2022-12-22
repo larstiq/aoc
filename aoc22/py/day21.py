@@ -53,8 +53,17 @@ def day21(filename):
                 for input_monkey in [words[0], words[-1]]:
                     tree.add_edge(input_monkey, name)
             else:
-                tree.add_node(name, expr=expression)
-                tree.nodes[name]['value'] = int(expression)
+                if name == 'humn':
+                    expr = sympy.parse_expr('humn')
+                    value = expr
+                elif name == 'root':
+                    expr = expression
+                else:
+                    expr = expression
+                    value = int(expression)
+
+                tree.add_node(name, expr=expr)
+                tree.nodes[name]['value'] = value
                 leaf_monkeys.add(name)
 
 
@@ -83,6 +92,7 @@ def day21(filename):
     print(leaf_monkeys)
     print(siblings)
 
+    breakpoint()
     print("part1:", tree.nodes['root'])
     print("part2:", part2)
 
