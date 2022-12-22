@@ -187,7 +187,7 @@ def day22(filename):
                 pos = [2*size, 2*size + 1 - (row - 2*size)]
         elif col == 3*size+1:
             if 1 <= row <= size:
-                # 1>BC<6
+                # 1>BC<4
                 ang = 2
                 pos = [3*size + 1 - (row - 0), 4*size]
             elif size+1 <= row <= 2*size:
@@ -301,7 +301,7 @@ def day22(filename):
             # 1->4
             # warp: 1>BA<4
             ang = 2
-            pos = [3*size + 1 - row, size]
+            pos = [3*size + 1 - row, 2*size]
 
 
         if pos is None or ang is None:
@@ -342,8 +342,8 @@ def day22(filename):
                 ang = direction
                 # Wrapping around, replace next square
                 if next_square == 0:
-                    if mix == 87:
-                        breakpoint()
+                    #if mix == 87:
+                        #    breakpoint()
                     forwards, ang = wrap(forwards, direction)
                     next_square = board[forwards[0], forwards[1]] 
                     
@@ -358,7 +358,7 @@ def day22(filename):
                     if 86 < mix < 100:
                         print("\n".join("".join(line) for line in pathboard))
                         print(mix, move, "/", len(moves))
-                        breakpoint()
+                        #breakpoint()
                 elif next_square == 2:
                     # Don't change position or angle if we'd step into a wall
                     stepped = True
