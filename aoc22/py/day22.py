@@ -185,7 +185,7 @@ def day22(filename):
                 # 5<YE^3
                 ang = 3
                 pos = [2*size, 2*size + 1 - (row - 2*size)]
-        elif col == 2*size+1:
+        elif col == 3*size+1:
             if 1 <= row <= size:
                 # 1>BC<6
                 ang = 2
@@ -194,7 +194,7 @@ def day22(filename):
                 # 4>CZv6
                 ang = 1
                 pos = [2*size + 1, 4*size + 1 - (row - size)]
-        elif col == 3*size + 1:
+        elif col == 4*size + 1:
             # 6>CB<1
             ang = 2
             pos = [size+1 - (row - 2*size), 2*size]
@@ -324,8 +324,6 @@ def day22(filename):
 
                 next_square = board[forwards[0], forwards[1]]
                 ang = direction
-                if forwards == [6, 13]:
-                    breakpoint()
                 # Wrapping around, replace next square
                 if next_square == 0:
                     forwards, ang = wrap(forwards, direction)
@@ -338,8 +336,8 @@ def day22(filename):
                     print("Stepped into", position, direction)
                     pathchar = {0: '>', 1: 'v', 2: '<', 3: '^'}[direction]
                     pathboard[position[0], position[1]] = pathchar
-                    for line in pathboard:
-                        print("".join(line))
+                    print("\n".join("".join(line) for line in pathboard))
+                    breakpoint()
                 elif next_square == 2:
                     # Don't change position or angle if we'd step into a wall
                     stepped = True
