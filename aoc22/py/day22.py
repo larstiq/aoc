@@ -321,7 +321,7 @@ def day22(filename):
 
     direction = 0
 
-    for move in moves:
+    for mix, move in enumerate(moves):
         distance, turn = move
         
         for i in range(distance):
@@ -342,6 +342,8 @@ def day22(filename):
                 ang = direction
                 # Wrapping around, replace next square
                 if next_square == 0:
+                    if mix == 87:
+                        breakpoint()
                     forwards, ang = wrap(forwards, direction)
                     next_square = board[forwards[0], forwards[1]] 
                     
@@ -352,8 +354,11 @@ def day22(filename):
                     print("Stepped into", position, direction)
                     pathchar = {0: '>', 1: 'v', 2: '<', 3: '^'}[direction]
                     pathboard[position[0], position[1]] = pathchar
-                    #print("\n".join("".join(line) for line in pathboard))
-                    #breakpoint()
+
+                    if 86 < mix < 100:
+                        print("\n".join("".join(line) for line in pathboard))
+                        print(mix, move, "/", len(moves))
+                        breakpoint()
                 elif next_square == 2:
                     # Don't change position or angle if we'd step into a wall
                     stepped = True
