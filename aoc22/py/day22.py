@@ -105,31 +105,94 @@ def day22(filename):
 
 
     def wrap_example(positon, direction):
-        # 1       A-B
-        #         |1|
-        # 51  B-A-X-C
-        #     |2|3|4|
-        # 101 D-E-Y-Z-C
-        #         |5|6|
-        # 150     E-D-B
 
+        # TODO: face data with left, top, right, bottom and orientation of edges
+        # TODO: encode the region instead of checking global position
+        # TODO: assert the transition is correct
+
+        #     0  1x  3x 
+        #     +1   2x  4x
+        # 0
+        # +1       A-B
+        #          |1|
+        # 1x   B-A-X-C
+        #      |2|3|4|
+        # 2x   D-E-Y-Z-C
+        #          |5|6|
+        # 3x       E-D-B
+
+        size = 4
         row, col = position[0], position[1]
         pos, ang = None, None
         # Edges up and down
         #
-        # There are 14 warping edges, in two directions
+        # There are 14 warping edges, 8 up/down, 6 left/right
         if row == 0:
             # 1^ABv2
-        elif row == 50:
-            if 1 <= col <= 50:
+            ang = 1
+            pos = [size+1, size - (col  - 2*size)]
+        elif row == size:
+            if 1 <= col <= size:
                 # 2^BAv1
-            elif 51 <= col <= 100:
+                ang = 1
+                pos = [1, 3*size + 1 - col]
+            elif size+1 <= col <= 2*size:
                 # 3^AX>1
+                ang = 0
+                pos = [col - size, 2 * size + 1]
+        elif row == 2*size:
+            # 6^ZC<4
+            ang = 2
+            pos = [2*size+1 - (col  - 3*size), 3 * size]
+        elif row == 2*size + 1:
+            if 1 <= col <= size:
+                # 2vDE^5
+                ang = 3
+                pos = [3*size, 3*size + 1 - col]
+            elif size+1 <= col <= 2*size:
+                # 3vEY>5
+                ang = 0
+                pos = [3*size + 1 - (col - size), 2*size + 1]
+        elif row == 3*size + 1:
+            if 2*size+1 <== col <= 3*size:
+                # 5vED^2
+                ang = 3
+                pos = [2*size, size + 1 - (col - 2*size)]
+            elif 3*size + 1 <= col <= 4*size:
+                # 6vDB>2
+                ang = 0
+                pos = [2*size + 1 - (col - 3*size), 1]
+
+        # Left-right edges
+        elif col == 1:
+            # 2<BD^6
+            ang = 3
+            pos = [3*size, 3*size + 1 - (row - size)]
+        elif col == 2*size:
+            if 1 <= row <= size:
+                # 1<AXv3
+                ang = 1
+                pos = [size + 1, row - size]
+            elif 2*size+1 <= row <= 3*size:
+                # 5<YE^3
+                ang = 3
+                pos = [2*size, 2*size + 1 - (row - 2*size)]
+        elif col == 2*size+1:
+            if 1 <= row <= size:
+                # 1>BC<6
+                ang = 2
+                pos = [3*size + 1 - (row - 0), 4*size]
+            elif size+1 <= row <= 2*size:
+                # 4>CZv6
+                ang = 1
+                pos = [2*size + 1, 4*size + 1 - (row - size)]
+        elif row == 3*size + 1:
+            # 6>CB<1
+            ang = 2
+            pos = [size+1 - (row - 2*size), 2*size]
 
 
-
-
-
+        return pos, ang
 
     def wrap_input(position, direction):
         pos, ang = None, None
@@ -259,6 +322,7 @@ def day22(filename):
                     direction = ang
                     print("Stepped into", position, direction)
                 elif next_square == 2:
+                    # Don't change position or angle if we'd step into a wall
                     stepped = True
 
         if turn == "R":
