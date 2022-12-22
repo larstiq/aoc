@@ -82,6 +82,41 @@ def day22(filename):
         moves.append((39, 'N'))
 
 
+    # Cube l
+    #
+    #
+    # Connectivity
+    #
+    # 6 faces, 4 transitions, warps position and direction
+    #
+    #
+    #      21
+    #      3
+    #     54
+    #     6
+    #
+    #     Folding around 4, 2 is the top. 
+    #
+    #     1:    2 normal, 6, 4, 3 warp, opposite 5
+    #     2: 1, 3 normal, 5, 6    warp, opposite 4
+    #     3: 2, 4 normal, 1, 5    warp, opposite 6
+    #     4: 3, 5 normal, 1, 6    warp, opposite 2
+    #     5: 4, 6 normal, 3, 2    warp, opposite 1
+    #     6:    5 normal, 4, 2, 1 warp, opposite 3
+
+    def warp(position, direction):
+        if 0 <= position[0] <= 49:
+            # 1 or 2
+        elif 50 <= position[0] <= 99:
+            # 3
+        elif 100 <= position[0] <= 149:
+            # 5 or 4
+        elif 150 <= position[0] <= 199:
+            # 6
+
+        breakpoint()
+
+
     # Find first 1 in first row
     position = [0, 8]
     direction = 0
@@ -103,23 +138,24 @@ def day22(filename):
                     forwards[0] -= 1
 
 
+                # Wrap
                 if forwards[0] == -1:
-                    forwards[0] = board.shape[0] - 1
+                    forwards, direction = wrap(forwards, direction)
                 elif forwards[1] == -1:
-                    forwards[1] = board.shape[1] - 1
+                    forwards, direction = wrap(forwards, direction)
 
                 try:
                     next_square = board[forwards[0], forwards[1]]
                 except IndexError:
                     # wrap around
                     if direction == 0:
-                        forwards[1] = 0
+                        forwards, direction = wrap(forwards, direction)
                     elif direction == 1:
-                        forwards[0] = 0
+                        forwards, direction = wrap(forwards, direction)
                     elif direction == 2:
-                        forwards[1] = board.shape[1] - 1
+                        forwards, direction = wrap(forwards, direction)
                     elif direction == 3:
-                        forwards[0] = board.shape[0] - 1
+                        forwards, direction = wrap(forwards, direction)
 
                     next_square = board[forwards[0], forwards[1]]
                     
@@ -129,6 +165,10 @@ def day22(filename):
                     print("Stepped into", position, direction)
                 elif next_square == 2:
                     stepped = True
+
+                # Also a wrap now
+                elif next_square == 0:
+                    forwards, direction = wrap(forwards, direction)
 
         if turn == "R":
             direction = (direction + 1) % 4
@@ -149,5 +189,5 @@ def day22(filename):
     print("part2:", part2)
 
 
-day22(examples("22"))
+#day22(examples("22"))
 day22(inputs("22"))
