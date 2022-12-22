@@ -102,6 +102,12 @@ def day22(filename):
                 elif direction == 3:
                     forwards[0] -= 1
 
+
+                if forwards[0] == -1:
+                    forwards[0] = board.shape[0] - 1
+                elif forwards[1] == -1:
+                    forwards[1] = board.shape[1] - 1
+
                 try:
                     next_square = board[forwards[0], forwards[1]]
                 except IndexError:
