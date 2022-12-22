@@ -103,7 +103,35 @@ def day22(filename):
     #
     # Identifying vertices and edges
 
-    def wrap(position, direction):
+
+    def wrap_example(positon, direction):
+        # 1       A-B
+        #         |1|
+        # 51  B-A-X-C
+        #     |2|3|4|
+        # 101 D-E-Y-Z-C
+        #         |5|6|
+        # 150     E-D-B
+
+        row, col = position[0], position[1]
+        pos, ang = None, None
+        # Edges up and down
+        #
+        # There are 14 warping edges, in two directions
+        if row == 0:
+            # 1^ABv2
+        elif row == 50:
+            if 1 <= col <= 50:
+                # 2^BAv1
+            elif 51 <= col <= 100:
+                # 3^AX>1
+
+
+
+
+
+
+    def wrap_input(position, direction):
         pos, ang = None, None
         if position[0] == 0:
             # We stepped up out of 1 or 2
@@ -192,7 +220,14 @@ def day22(filename):
 
 
     # Find first 1 in first row
-    position = [1, 51]
+
+    if "example" in str(filename):
+        position = [1, 9]
+        wrap = wrap_example
+    else
+        position = [1, 51]
+        wrap = wrap_input
+
     direction = 0
     for move in moves:
         distance, turn = move
