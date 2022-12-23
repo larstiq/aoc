@@ -34,12 +34,12 @@ def day23(filename):
 
     # Enough of a border that in 10 rounds we won't hit it:w
 
-    grove = np.zeros(shape=(len(data)+400, len(data[0])+400), dtype=int)
+    grove = np.zeros(shape=(len(data)+80, len(data[0])+80), dtype=int)
 
     for ix, line in enumerate(data):
         for jx, lc in enumerate(line):
             if lc == "#":
-                grove[200+ix, 200+jx] = 1
+                grove[80+ix, 80+jx] = 1
             
     print(grove)
 
@@ -67,6 +67,9 @@ def day23(filename):
         [0, 0, 1],
         [0, 0, 1],
     ])
+
+
+    global_mms = [[None, None], [None, None]]
 
     for round_ in itertools.count():
         elves = np.where(grove)
@@ -121,6 +124,17 @@ def day23(filename):
         print(f"At the end of round {round_} the grove looks like")
         #display_grove(new_grove)
 
+        mm_elves = np.where(new_grove)
+
+        if global_mms[0][0] is None or min(mm_elves[0]) < global_mms[0][0]:
+            global_mms[0][0] = min(mm_elves[0])
+        if global_mms[0][1] is None or max(mm_elves[0]) > global_mms[0][1]:
+            global_mms[0][1] = max(mm_elves[0])
+        if global_mms[1][0] is None or min(mm_elves[1]) < global_mms[1][0]:
+            global_mms[1][0] = min(mm_elves[0])
+        if global_mms[1][1] is None or max(mm_elves[1]) > global_mms[1][1]:
+            global_mms[1][1] = max(mm_elves[1])
+
 
         if (grove == new_grove).all():
             part2 = round_ + 1
@@ -129,8 +143,9 @@ def day23(filename):
         grove = new_grove
             
         
-    end_elves = np.where(grove)
-    min_rect = grove[min(end_elves[0]):max(end_elves[0])+1, min(end_elves[1]):max(end_elves[1])+1]
+    print(global_mms)
+    end_elves = np.where(new_grove)
+    min_rect = new_grove[min(end_elves[0]):max(end_elves[0])+1, min(end_elves[1]):max(end_elves[1])+1]
     part1 = (min_rect == 0).sum(axis=None)
 
     print("part1:", part1)
