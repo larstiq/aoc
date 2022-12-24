@@ -63,12 +63,9 @@ def day24(filename):
 
     positions = {(-1, 0)}
 
-    found = False
     snack = None
-    foundagain = False
     for ronde in itertools.count(1):
-        if foundagain:
-            breakpoint()
+        if part2 > 0:
             break
 
         next_positions = set()
@@ -93,14 +90,12 @@ def day24(filename):
                 if ronde == 42:
                     print(step)
                 if step[0] == blizzards[0].shape[0] and step[1] == blizzards[0].shape[1] - 1:
-                    if not found:
-                        found = True
+                    if part1 == 0:
                         part1 = ronde
                         next_positions.clear()
                         next_positions.add(step)
                         break
                     elif snack is not None:
-                        foundagain = True
                         part2 = ronde
                         next_positions.clear()
                         next_positions.add(step)
@@ -110,7 +105,7 @@ def day24(filename):
                         continue
 
                 elif step[0] == -1 and step[1] == 0:
-                    if found and snack is None:
+                    if part1 > 0 and snack is None:
                         snack = ronde
                         next_positions.clear()
                         next_positions.add(step)
@@ -131,7 +126,7 @@ def day24(filename):
                 else:
                     next_positions.add(step)
 
-            if found and ronde == part1:
+            if ronde == part1:
                 break
             if snack == ronde:
                 break
