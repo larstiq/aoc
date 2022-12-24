@@ -75,6 +75,8 @@ def day24(filename):
             elif ix == 3:
                 blizzards[ix] = np.roll(blizzards[ix], -1, axis=0)
 
+        # TODO: consider combined blizzards and positions map, 1-connected + center
+
         for pos in positions:
             for (dx, dy) in [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]:
                 step = pos[0] + dx, pos[1] + dy
@@ -92,12 +94,14 @@ def day24(filename):
 
                 for blizzard in blizzards:
                     if blizzard[step[0], step[1]]:
-                        continue
+                        break
                 else:
                     next_positions.add((step[0], step[1]))
 
         print(f"Ending round {ronde} with {len(next_positions)} positions")
+        print(next_positions)
         display_blizzards(blizzards)
+        print('-' * 80)
         positions = next_positions
 
         if ronde == 1:
