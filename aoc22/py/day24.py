@@ -145,9 +145,6 @@ def day24(filename):
         print('-' * 80)
         positions = next_positions
 
-        if ronde > 54:
-            break
-
 
     print("part1:", part1)
     print("part2:", part2)
