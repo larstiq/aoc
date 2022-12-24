@@ -2,17 +2,9 @@
 
 from utils import examples, inputs
 
-from collections import defaultdict, deque, Counter
-import time
-
 import numpy as np
-import re
 import itertools
 
-import networkx as nx
-import sympy
-
-from dataclasses import dataclass
 from scipy.ndimage import binary_fill_holes, correlate, generate_binary_structure
 
 
@@ -47,8 +39,6 @@ def day24(filename):
         for line in puzzlein:
             data.append(line.strip())
 
-    # Enough of a border that in 10 rounds we won't hit it:w
-
 
     blizzards = []
     for blizzard in '><v^':
@@ -61,7 +51,9 @@ def day24(filename):
                     field[ix, jx] = 1
 
 
-    positions = {(-1, 0)}
+    START = (-1, 0)
+    END = (blizzards[0].shape[0], blizzards[0].shape[1] - 1)
+    positions = {START}
 
     snack = None
     for ronde in itertools.count(1):
@@ -81,40 +73,22 @@ def day24(filename):
 
         # TODO: consider combined blizzards and positions map, 1-connected + center
 
-
-        # TODO: extract start and end positions to compute once
-
         for pos in positions:
             for (dx, dy) in [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]:
                 step = pos[0] + dx, pos[1] + dy
-                if ronde == 42:
-                    print(step)
-                if step[0] == blizzards[0].shape[0] and step[1] == blizzards[0].shape[1] - 1:
+                if step == END:
+                    next_positions.add(step)
                     if part1 == 0:
                         part1 = ronde
-                        next_positions.clear()
-                        next_positions.add(step)
-                        break
                     elif snack is not None:
                         part2 = ronde
-                        next_positions.clear()
-                        next_positions.add(step)
-                        break
-                    else: # Temporary shelter
-                        next_positions.add(step)
-                        continue
+                    continue
 
-                elif step[0] == -1 and step[1] == 0:
+                elif step == START:
+                    next_positions.add(step)
                     if part1 > 0 and snack is None:
                         snack = ronde
-                        next_positions.clear()
-                        next_positions.add(step)
-                        breakpoint()
-                        break
-                    else:
-                        next_positions.add(step)
-                        continue
-
+                    continue
 
                 elif step[0] < 0 or step[1] < 0 or step[0] >= blizzards[0].shape[0] or step[1] >= blizzards[0].shape[1]:
                     # Can't step onto a wall, skip it
@@ -127,12 +101,11 @@ def day24(filename):
                     next_positions.add(step)
 
             if ronde == part1:
+                next_positions = {END}
                 break
             if snack == ronde:
+                next_positions = {START}
                 break
-
-        if len(next_positions) == 0:
-            breakpoint()
 
         print(f"Ending round {ronde} with {len(next_positions)} positions")
         print(next_positions)
