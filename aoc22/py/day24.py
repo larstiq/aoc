@@ -63,7 +63,11 @@ def day24(filename):
 
     positions = {(-1, 0)}
 
+    found = False
     for ronde in itertools.count(1):
+        if found:
+            break
+
         next_positions = set()
         for ix in range(4):
             if ix == 0:
@@ -81,8 +85,11 @@ def day24(filename):
             for (dx, dy) in [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]:
                 step = pos[0] + dx, pos[1] + dy
                 if step[0] == blizzards[0].shape[0] and step[1] == blizzards[0].shape[1] - 1:
-                    breakpoint()
                     print("Found the exit point")
+                    next_positions.add((step))
+                    part1 = ronde
+                    found = True
+                    break
 
                 elif step[0] == -1 and step[1] == 0:
                     next_positions.add((-1, 0))
@@ -96,56 +103,16 @@ def day24(filename):
                     if blizzard[step[0], step[1]]:
                         break
                 else:
-                    next_positions.add((step[0], step[1]))
+                    next_positions.add(step)
+            if found:
+                break
+
 
         print(f"Ending round {ronde} with {len(next_positions)} positions")
         print(next_positions)
         display_blizzards(blizzards)
         print('-' * 80)
         positions = next_positions
-
-        if ronde == 1:
-            assert (0, 0) in positions
-        elif ronde == 2:
-            assert (1, 0) in positions
-        elif ronde == 3:
-            assert (1, 0) in positions
-        elif ronde == 4:
-            assert (0, 0) in positions
-        elif ronde == 5:
-            assert (0, 1) in positions
-        elif ronde == 6:
-            assert (0, 2) in positions
-        elif ronde == 7:
-            assert (1, 2) in positions
-        elif ronde == 8:
-            assert (1, 1) in positions
-        elif ronde == 9:
-            assert (0, 1) in positions
-        elif ronde == 10:
-            assert (0, 2) in positions
-        elif ronde == 11:
-            assert (0, 2) in positions
-        elif ronde == 12:
-            assert (1, 2) in positions
-        elif ronde == 13:
-            assert (2, 2) in positions
-        elif ronde == 14:
-            assert (2, 3) in positions
-        elif ronde == 15:
-            assert (2, 4) in positions
-        elif ronde == 16:
-            assert (2, 5) in positions
-        elif ronde == 10:
-            assert (3, 5) in positions
-        elif ronde == 10:
-            assert (4, 5) in positions
-
-        if ronde > 20:
-            break
-
-
-
 
 
     print("part1:", part1)
