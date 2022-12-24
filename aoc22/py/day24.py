@@ -64,8 +64,11 @@ def day24(filename):
     positions = {(-1, 0)}
 
     found = False
+    snack = None
+    foundagain = False
     for ronde in itertools.count(1):
-        if found:
+        if foundagain:
+            breakpoint()
             break
 
         next_positions = set()
@@ -81,19 +84,42 @@ def day24(filename):
 
         # TODO: consider combined blizzards and positions map, 1-connected + center
 
+
+        # TODO: extract start and end positions to compute once
+
         for pos in positions:
             for (dx, dy) in [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]:
                 step = pos[0] + dx, pos[1] + dy
+                if ronde == 42:
+                    print(step)
                 if step[0] == blizzards[0].shape[0] and step[1] == blizzards[0].shape[1] - 1:
-                    print("Found the exit point")
-                    next_positions.add((step))
-                    part1 = ronde
-                    found = True
-                    break
+                    if not found:
+                        found = True
+                        part1 = ronde
+                        next_positions.clear()
+                        next_positions.add(step)
+                        break
+                    elif snack is not None:
+                        foundagain = True
+                        part2 = ronde
+                        next_positions.clear()
+                        next_positions.add(step)
+                        break
+                    else: # Temporary shelter
+                        next_positions.add(step)
+                        continue
 
                 elif step[0] == -1 and step[1] == 0:
-                    next_positions.add((-1, 0))
-                    print("Back at start")
+                    if found and snack is None:
+                        snack = ronde
+                        next_positions.clear()
+                        next_positions.add(step)
+                        breakpoint()
+                        break
+                    else:
+                        next_positions.add(step)
+                        continue
+
 
                 elif step[0] < 0 or step[1] < 0 or step[0] >= blizzards[0].shape[0] or step[1] >= blizzards[0].shape[1]:
                     # Can't step onto a wall, skip it
@@ -104,15 +130,23 @@ def day24(filename):
                         break
                 else:
                     next_positions.add(step)
-            if found:
+
+            if found and ronde == part1:
+                break
+            if snack == ronde:
                 break
 
+        if len(next_positions) == 0:
+            breakpoint()
 
         print(f"Ending round {ronde} with {len(next_positions)} positions")
         print(next_positions)
         display_blizzards(blizzards)
         print('-' * 80)
         positions = next_positions
+
+        if ronde > 54:
+            break
 
 
     print("part1:", part1)
