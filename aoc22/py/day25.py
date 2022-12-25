@@ -50,24 +50,16 @@ def decimal_to_list(number):
     remainder = number
     five_places = {jx: 0 for jx in range(ix)}
 
-    while remainder != 0:
+    while ix > 0:
         for coeff in [1, 2, -2, -1]:
             if in_snafu_range(remainder, coeff, ix):
                 five_places[ix] = coeff
                 remainder -= coeff * 5 ** ix
                 break
-        else:
-            if ix > max(five_places):
-                pass
-            elif ix > 0:
-                five_places[ix] = 0
-            else:
-                five_places[0] = remainder
-                remainder = 0
 
         ix -= 1
 
-    assert remainder == 0
+    five_places[0] = remainder
 
     return [v for (k, v) in sorted(five_places.items())]
 
