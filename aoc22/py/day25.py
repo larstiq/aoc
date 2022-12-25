@@ -43,6 +43,10 @@ def largest_five_place(number):
             return ix
 
 
+def snafu_to_decimal(snafu):
+    return list_to_decimal(snafu_to_list(snafu))
+
+
 def peal(number):
     if number == 497:
         breakpoint()
@@ -66,40 +70,60 @@ def peal(number):
 def decimal_to_list(number):
     ix = largest_five_place(number)
     remainder = number
-    five_places = {}
-    
-    while ix > -1:
-        if ix in five_places:
+    five_places = {jx: 0 for jx in range(ix)}
+
+    while remainder != 0:
+        #lower = snafu_to_decimal("1" + "=" * ix)
+        #upper = snafu_to_decimal("1" + "0" * ix)
+
+        #assert lower <= remainder <= upper
+
+        # The leading two digits can be either
+        # "10" (exact match), "1-" or "1="
+
+        if number == 906:
+            pass
+
+        if ix < 0 and remainder < 3:
             breakpoint()
+            five_places[0] = 1
+
+
+        if   snafu_to_decimal("1=" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("1" + "2" * ix):
+            five_places[ix] = 1
+            remainder -= 5**ix
             ix -= 1
-            continue
-        if 5**ix >= remainder:
-            if 5**ix <= remainder:
-                five_places[ix] = 1
-                remainder -= 5**ix
-            elif 5**ix - 5**(ix - 1) <= remainder:
-                five_places[ix] = 1
-                five_places[ix - 1] = -1
-                remainder -= 5**ix - 5**(ix - 1)
-            # This doens't work because in case of 1== we still need to pick 1= here.
-            elif 5**ix - 2*5**(ix - 1) <= remainder:
-                five_places[ix] = 1
-                five_places[ix - 1] = -2
-                remainder -= 5**ix - 2*5**(ix - 1)
-        elif 2*5**ix <= remainder:
-            breakpoint()
+        elif snafu_to_decimal("2=" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("2" + "2" * ix):
             five_places[ix] = 2
             remainder -= 2*5**ix
+            ix -= 1
+        elif snafu_to_decimal("==" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("=" + "2" * ix):
+            five_places[ix] = -2
+            remainder -= -2*5**ix
+            ix -= 1
+        elif snafu_to_decimal("-=" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("-" + "2" * ix):
+            five_places[ix] = -1
+            remainder -= -1*5**ix
+            ix -= 1
         else:
-            five_places[ix] = 0
+            if ix > max(five_places):
+                pass
+            elif ix > 0:
+                five_places[ix] = 0
+            else:
+                assert 0 <= remainder < 3
+                assert ix == 0
+                five_places[0] = remainder
+                remainder = 0
 
-        if number - remainder != sum(v*5**k for (k, v) in five_places.items()):
-            breakpoint()
+            ix -= 1
 
-        ix -= 1
+    assert remainder == 0
 
-    return [v for (k, v) in sorted(five_places.items())]
-
+    res = [v for (k, v) in sorted(five_places.items())]
+    if res[-1] == 0:
+        breakpoint()
+    return res
 
 def list_to_snafu(lijst):
     return "".join(decimal2snafu[d] for d in reversed(lijst))
@@ -112,14 +136,15 @@ def day24(filename):
     part1 = 0
     part2 = 0
 
-    data = []
+    snafus = []
     with open(filename) as puzzlein:
         for line in puzzlein:
-            data.append(snafu_to_list(line.strip()))
+            snafus.append(line.strip())
 
-    print(data)
-
-    as_decimals = [list_to_decimal(l) for l in data]
+    print("snafus", snafus)
+    snafus_as_lists = [snafu_to_list(snafu) for snafu in snafus]
+    print("as lists", snafus_as_lists)
+    as_decimals = [list_to_decimal(l) for l in snafus_as_lists]
     print("as decimals", as_decimals)
     print("decimals to lists", [decimal_to_list(d) for d in as_decimals])
     print("snafus", [list_to_snafu(decimal_to_list(d)) for d in as_decimals])
