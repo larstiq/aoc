@@ -3,18 +3,8 @@
 from utils import examples, inputs
 
 from collections import defaultdict, deque, Counter
-import time
 
-import numpy as np
-import re
 import itertools
-
-import networkx as nx
-import sympy
-
-from dataclasses import dataclass
-from scipy.ndimage import binary_fill_holes, correlate, generate_binary_structure
-
 
 snafu2decimal = {
     "2": 2,
@@ -47,24 +37,11 @@ def snafu_to_decimal(snafu):
     return list_to_decimal(snafu_to_list(snafu))
 
 
-def peal(number):
-    if number == 497:
-        breakpoint()
-    # TODO: zero?
-    for ix in itertools.count():
-        if 5**ix >= number:
-            if 5**ix <= number:
-                return {ix: 1}, number - 5**ix
-            elif 5**ix - 5**(ix - 1) <= number:
-                return {ix: 1, ix - 1: -1}, number - (5**ix - 5**(ix - 1))
-            elif 5**ix - 2*5**(ix - 1) <= number:
-                return {ix: 1, ix - 1: - 2}, number - (5**ix - 2*5**(ix - 1))
-            elif 2*5**(ix - 1) <= number:
-                return {ix - 1: 2}, number - 2*5**(ix - 1)
-            elif 1*5**(ix - 1) <= number:
-                return {ix - 1: 1}, number - 1*5**(ix - 1)
-            else:
-                return {ix - 1: 0}, number
+def in_snafu_range(number, coeff, remaining_digits):
+    first_digit = decimal2snafu[coeff]
+
+    return snafu_to_decimal(first_digit + "=" * remaining_digits) <= number <= snafu_to_decimal(first_digit + "2" * remaining_digits)
+
 
 
 def decimal_to_list(number):
@@ -73,46 +50,18 @@ def decimal_to_list(number):
     five_places = {jx: 0 for jx in range(ix)}
 
     while remainder != 0:
-        #lower = snafu_to_decimal("1" + "=" * ix)
-        #upper = snafu_to_decimal("1" + "0" * ix)
-
-        #assert lower <= remainder <= upper
-
-        # The leading two digits can be either
-        # "10" (exact match), "1-" or "1="
-
-        if number == 906:
-            pass
-
-        if ix < 0 and remainder < 3:
-            breakpoint()
-            five_places[0] = 1
-
-
-        if   snafu_to_decimal("1=" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("1" + "2" * ix):
-            five_places[ix] = 1
-            remainder -= 5**ix
-            ix -= 1
-        elif snafu_to_decimal("2=" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("2" + "2" * ix):
-            five_places[ix] = 2
-            remainder -= 2*5**ix
-            ix -= 1
-        elif snafu_to_decimal("==" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("=" + "2" * ix):
-            five_places[ix] = -2
-            remainder -= -2*5**ix
-            ix -= 1
-        elif snafu_to_decimal("-=" + "=" * (ix - 1)) <= remainder <= snafu_to_decimal("-" + "2" * ix):
-            five_places[ix] = -1
-            remainder -= -1*5**ix
-            ix -= 1
+        for coeff in [1, 2, -2, -1]:
+            if in_snafu_range(remainder, coeff, ix):
+                five_places[ix] = coeff
+                remainder -= coeff*5**ix
+                ix -= 1
+                break
         else:
             if ix > max(five_places):
                 pass
             elif ix > 0:
                 five_places[ix] = 0
             else:
-                assert 0 <= remainder < 3
-                assert ix == 0
                 five_places[0] = remainder
                 remainder = 0
 
@@ -120,10 +69,7 @@ def decimal_to_list(number):
 
     assert remainder == 0
 
-    res = [v for (k, v) in sorted(five_places.items())]
-    if res[-1] == 0:
-        breakpoint()
-    return res
+    return [v for (k, v) in sorted(five_places.items())]
 
 def list_to_snafu(lijst):
     return "".join(decimal2snafu[d] for d in reversed(lijst))
@@ -146,16 +92,18 @@ def day24(filename):
     print("as lists", snafus_as_lists)
     as_decimals = [list_to_decimal(l) for l in snafus_as_lists]
     print("as decimals", as_decimals)
-    print("decimals to lists", [decimal_to_list(d) for d in as_decimals])
-    print("snafus", [list_to_snafu(decimal_to_list(d)) for d in as_decimals])
+    lists_again = [decimal_to_list(d) for d in as_decimals]
+    print("decimals to lists", lists_again, snafus_as_lists == lists_again) 
+    snafus_again = [list_to_snafu(l) for l in lists_again]
+    print("snafus again", snafus_again, snafus == snafus_again)
 
     total_decimal = sum(as_decimals)
-    print(total_decimal)
+    print("total decimal", total_decimal)
     print(decimal_to_list(total_decimal))
     part1 = list_to_snafu(decimal_to_list(total_decimal))
 
     print("part1:", part1)
-    print("part2:", part2)
+    print("part2:", "start the blender")
     breakpoint()
 
 
