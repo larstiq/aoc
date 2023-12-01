@@ -2,97 +2,40 @@
 
 from utils import inputs, examples
 
-import re
+import regex as re
 
-words = [
-"zero",
-"one",
-"two",
-"three",
-"four",
-"five",
-"six",
-"seven",
-"eight",
-"nine",
-]
+digits = list("0123456789")
+words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 
-regex = "0|1|2|3|4|5|6|7|8|9|one|two|three|four|five|six|seven|eight|nine"
-regex_simple = "0|1|2|3|4|5|6|7|8|9"
+word_to_digit = { word: str(ix) for (ix, word) in enumerate(words) }
+values = {str(d): d for d in range(10)} | {word: ix for (ix, word) in enumerate(words) }
+digits_regex = "|".join(digits)
+words_regex = "|".join(digits + words)
 
-values = {
-    "0": 0,
-    "1": 1,
-    "2": 2,
-    "3": 3,
-    "4": 4,
-    "5": 5,
-    "6": 6,
-    "7": 7,
-    "8": 8,
-    "9": 9,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-}
 
-word_to_digit = {
-    "one": "1",
-    "two": "2",
-    "three": "3",
-    "four": "4",
-    "five": "5",
-    "six": "6",
-    "seven": "7",
-    "eight": "8",
-    "nine": "9",
-}
+def calibration_number(symbols, line):
+    try:
+        results = re.findall(symbols, line, overlapped=True)
+        number = int(str(values[results[0]]) + str(values[results[-1]]))
+    except:
+        number = 0
+    return number
 
 def day01(filename):
     print()
     print(filename)
 
     with open(filename) as puzzlein:
-        total = 0
-        word_total = 0
-        calibs = []
+        calibration_digits = []
+        calibration_words = []
         for line in puzzlein:
+            line = line.strip()
 
-            results = re.findall(regex, line)
-            simple = re.findall(regex_simple, line)
+            calibration_digits.append(calibration_number(digits_regex, line))
+            calibration_words.append(calibration_number(words_regex, line))
 
-            #if len(results) < 2:
-            #    breakpoint()
-
-            number = int(str(values[results[0]]) + str(values[results[-1]]))
-            #print(line, number)
-
-            if str(number) != word_to_digit.get(results[0], results[0]) + word_to_digit.get(results[-1], results[-1]):
-                breakpoint()
-
-            #simple_number = int(simple[0] + simple[-1])
-            #total += simple_number
-            word_total += number 
-            calibs.append(number)
-            print(line, number, results)
-            breakpoint()
-
-        print(total)
-        print(word_total)
-        print(calibs)
-        print(sum(calibs))
-        print(len(calibs))
-
-
-    print("part1", total)
-    print("part2", word_total)
-
+    print("part1", sum(calibration_digits))
+    print("part2", sum(calibration_words))
 
 day01(examples("01"))
 day01(inputs("01"))
