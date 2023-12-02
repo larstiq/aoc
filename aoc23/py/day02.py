@@ -2,11 +2,7 @@
 
 from utils import inputs, examples
 
-import regex as re
-
-import numpy as np
-import pandas as pd
-
+from collections import Counter
 
 
 def day02(filename):
@@ -14,7 +10,7 @@ def day02(filename):
     print(filename)
 
     games = {}
-    maxes = { "red": 12, "green": 13, "blue": 14}
+    maxes = Counter({ "red": 12, "green": 13, "blue": 14})
     with open(filename) as puzzlein:
         for line in puzzlein:
             line = line.strip()
@@ -35,27 +31,30 @@ def day02(filename):
             games[gid] = pull_amounts
 
 
-    print(games)
-
-    possible = []
+    possible_games = []
+    powers = []
     for gid, pull_amounts in games.items():
         nope = False
+        minus = Counter({"red": 0, "blue": 0, "green": 0})
         for pull in pull_amounts:
             for ball, amount in pull.items():
+                if amount > minus[ball]:
+                    minus[ball] = amount
                 if amount > maxes[ball]:
                     nope = True
-                    break
-            if nope:
-                break
         if not nope:
-            possible.append(gid)
+            possible_games.append(gid)
+
+        mv = list(minus.values())
+        powers.append(mv[0] * mv[1] * mv[2])
 
 
-    print(possible)
-    print(sum(possible))
+    part1 = sum(possible_games)
+    part2 = sum(powers)
 
-    #print("part1", part1)
-    #print("part2", part2)
+    print("part1", part1)
+    print("part2", part2)
+
 
 day02(examples("02"))
 day02(inputs("02"))
