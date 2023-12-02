@@ -32,15 +32,15 @@ def day02(filename):
 
 
     maxes = Counter(red=12, green=13, blue=14)
-    possible_games = set(games)
+    possible_games = set()
     game_powers = []
     for gid, pull_amounts in games.items():
         minimum = Counter()
         for pull in pull_amounts:
             minimum |= pull
 
-        if not minimum < maxes:
-            possible_games -= set({gid})
+        if minimum < maxes:
+            possible_games.add(gid)
 
         game_powers.append(prod(minimum.values()))
 
