@@ -38,8 +38,9 @@ def day02(filename):
         minimum = Counter(red=0, blue=0, green=0)
         for pull in pull_amounts:
             minimum |= pull
-            if not pull < maxes:
-                possible_games -= set({gid})
+
+        if not minimum < maxes:
+            possible_games -= set({gid})
 
         game_powers.append(prod(minimum.values()))
 
