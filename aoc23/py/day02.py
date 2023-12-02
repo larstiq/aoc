@@ -3,6 +3,7 @@
 from utils import inputs, examples
 
 from collections import Counter
+from math import prod
 
 
 def day02(filename):
@@ -10,7 +11,6 @@ def day02(filename):
     print(filename)
 
     games = {}
-    maxes = Counter({ "red": 12, "green": 13, "blue": 14})
     with open(filename) as puzzlein:
         for line in puzzlein:
             line = line.strip()
@@ -20,7 +20,7 @@ def day02(filename):
             pulls = right.split(";")
             pull_amounts = []
             for pull in pulls:
-                ball_amounts = {}
+                ball_amounts = Counter()
                 balls = pull.split(",")
                 for ball in balls:
                     amount, colour = ball.strip().split(" ")
@@ -31,26 +31,29 @@ def day02(filename):
             games[gid] = pull_amounts
 
 
+    maxes = Counter(red=12, green=13, blue=14)
     possible_games = []
-    powers = []
+    game_powers = []
     for gid, pull_amounts in games.items():
-        nope = False
-        minus = Counter({"red": 0, "blue": 0, "green": 0})
+        is_game_possible = True
+        minimum = Counter(red=0, blue=0, green=0)
         for pull in pull_amounts:
-            for ball, amount in pull.items():
-                if amount > minus[ball]:
-                    minus[ball] = amount
-                if amount > maxes[ball]:
-                    nope = True
-        if not nope:
+            minimum |= pull
+            if not pull < maxes:
+                is_game_possible = False
+
+        if is_game_possible:
             possible_games.append(gid)
 
-        mv = list(minus.values())
-        powers.append(mv[0] * mv[1] * mv[2])
+        game_powers.append(prod(minimum.values()))
 
 
     part1 = sum(possible_games)
-    part2 = sum(powers)
+    part2 = sum(game_powers)
+
+    if str(filename).endswith("inputs/02"):
+        assert part1 == 2265
+        assert part2 == 64097
 
     print("part1", part1)
     print("part2", part2)
