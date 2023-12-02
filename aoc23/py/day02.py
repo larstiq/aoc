@@ -35,7 +35,7 @@ def day02(filename):
     possible_games = set(games)
     game_powers = []
     for gid, pull_amounts in games.items():
-        minimum = Counter(red=0, blue=0, green=0)
+        minimum = Counter()
         for pull in pull_amounts:
             minimum |= pull
 
