@@ -60,12 +60,21 @@ def day03(filename):
     prev = maybe_partts
     nextn = scipy.ndimage.binary_dilation(symbol_pos, structure) & maybe_partts
     leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
+
+    wat = 0
     while not prev.equals(nextn):
+        wat += 1
         prev = nextn
         nextn = scipy.ndimage.binary_dilation(nextn, leftright) & maybe_partts
+        display_blizzards(df[nextn & ~prev])
+
+    print("Wat", wat)
 
 
-    breakpoint()
+    #breakpoint()
+
+    lelijk = [int(x) for x in ''.join(''.join(row) for row in df[nextn].fillna(" ").values).split(" ") if x != '']
+    
     parts = []
     for ix, row in df[nextn].iterrows():
         accum = []
@@ -79,6 +88,56 @@ def day03(filename):
             else:
                 print("Error!")
                 breakpoint()
+
+    nonparts = []
+    for ix, row in df[maybe_partts & ~nextn].iterrows():
+        accum = []
+        for char in row:
+            if isinstance(char, float):
+                if accum != []:
+                    nonparts.append(int(''.join(accum)))
+                    accum = []
+            elif char in string.digits:
+                accum.append(char)
+            else:
+                print("Error!")
+                breakpoint()
+
+
+    gears = df.isin(set('*'))
+
+    real_gear_pos = (df == 0)
+    for gear_pos in df[gears].stack().index:
+        block = df[gear_pos[0] -1:gear_pos[0] + 2][[gear_pos[1] - 1, gear_pos[1], gear_pos[1] + 1]]
+        labels, nb = scipy.ndimage.label(block.isin(set(string.digits)))
+        if nb > 1:
+            real_gear_pos[gear_pos[1]][gear_pos[0]] = True
+
+    prev = maybe_partts
+    nextn = scipy.ndimage.binary_dilation(real_gear_pos, structure) & maybe_partts
+    leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
+
+    wat = 0
+    while not prev.equals(nextn):
+        wat += 1
+        prev = nextn
+        nextn = scipy.ndimage.binary_dilation(nextn, leftright) & maybe_partts
+
+    display_blizzards(df[nextn])
+    breakpoint()
+
+
+
+    prev = maybe_partts
+    nextn = scipy.ndimage.binary_dilation(gears, structure) & maybe_partts
+    leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
+
+    wat = 0
+    while not prev.equals(nextn):
+        wat += 1
+        prev = nextn
+        nextn = scipy.ndimage.binary_dilation(nextn, leftright) & maybe_partts
+        display_blizzards(df[nextn & ~prev])
 
     breakpoint()
 
