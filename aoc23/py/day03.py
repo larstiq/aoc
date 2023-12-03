@@ -41,23 +41,15 @@ def day03(filename):
     symbol_pos = df.isin(real_symbols)
     maybe_partts = df.isin(digits)
     structure = generate_binary_structure(2, 2)
-
-    prev = maybe_partts
-    nextn = binary_dilation(symbol_pos, structure) & maybe_partts
     leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
 
-    while not prev.equals(nextn):
-        prev = nextn
-        nextn = binary_dilation(nextn, leftright) & maybe_partts
-
-
-
-
+    neighbours = binary_dilation(symbol_pos, structure) & maybe_partts
+    nextn = binary_propagation(neighbours, leftright, mask=maybe_partts) & maybe_partts
+    breakpoint()
 
     lelijk = [int(x) for x in ''.join(''.join(row) for row in df[nextn].fillna(" ").values).split(" ") if x != '']
     part1 = sum(lelijk)
     
-
     gears = df.isin(set('*'))
     gear_ratios = []
 
@@ -67,14 +59,8 @@ def day03(filename):
         if nb > 1:
             real_gear_pos = (df == 0)
             real_gear_pos[gear_pos[1]][gear_pos[0]] = True
-            prev = maybe_partts
-            nextn = binary_dilation(real_gear_pos, structure) & maybe_partts
-            leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
-
-            while not prev.equals(nextn):
-                prev = nextn
-                nextn = binary_dilation(nextn, leftright) & maybe_partts
-
+            neighbours = binary_dilation(real_gear_pos, structure) & maybe_partts
+            nextn = binary_propagation(neighbours, leftright, mask=maybe_partts) & maybe_partts
             lelijk = [int(x) for x in ''.join(''.join(row) for row in df[nextn].fillna(" ").values).split(" ") if x != '']
             gear_ratios.append(math.prod(lelijk))
 
