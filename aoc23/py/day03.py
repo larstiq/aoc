@@ -54,39 +54,52 @@ def day03(filename):
         binary_propagation(digits_bordering_symbols, leftright, mask=maybe_parts)
     )
     # Part numbers are separated by nans. Turn into one string with numbers separated by whitespace
-    aap = ''.join(parts_bordering_symbols.fillna(' ').values.reshape(1, df.size).tolist()[0])
+    aap = "".join(
+        parts_bordering_symbols.fillna(" ").values.reshape(1, df.size).tolist()[0]
+    )
     # Split the number string and make real ints
     part_numbers = [int(number) for number in aap.split()]
 
     part1 = sum(part_numbers)
 
-
     gears = df == "*"
     gear_ratios = []
-    breakpoint()
+    # breakpoint()
 
-    for gear_pos in df[gears].stack().index:
-        block = df[gear_pos[0] - 1 : gear_pos[0] + 2][
-            [gear_pos[1] - 1, gear_pos[1], gear_pos[1] + 1]
-        ]
-        labels, nb = label(block.isin(digits))
-        if nb > 1:
-            real_gear_pos = df == 0
-            real_gear_pos[gear_pos[1]][gear_pos[0]] = True
-            # breakpoint()
-            digits_bordering_gears = (
-                binary_dilation(real_gear_pos, friends) & maybe_parts
-            )
-            parts_bordering_gears = df.where(
-                binary_propagation(digits_bordering_gears, leftright, mask=maybe_parts)
-            )
-            # Part numbers are separated by nans. Turn into one string with numbers separated by whitespace
-            hond = ''.join(parts_bordering_gears.fillna(' ').values.reshape(1, df.size).tolist()[0])
-            # Split the number string and make real ints
-            part_numbers = [int(number) for number in hond.split()]
-            gear_ratios.append(math.prod(part_numbers))
+    # Label each connected component containing a gear
+    gear_regions, nregions = label(
+        binary_propagation(gears, friends, mask=maybe_parts), friends
+    )
+    labels = np.arange(1, nregions + 1)
+
+    def gear_ratios_in_region(gear_region, positions):
+        emit = []
+        accum = []
+        prevpos = None
+        for pos, val in sorted(zip(positions, gear_region)):
+            if val == "*":
+                continue
+            if accum == [] or pos == prevpos + 1:
+                accum.append(val)
+            elif pos > prevpos + 1:
+                emit.append(int("".join(accum)))
+                accum = [val]
+
+            prevpos = pos
+
+        emit.append(int("".join(accum)))
+        if len(emit) > 1:
+            ratio = math.prod(emit)
+        else:
+            ratio = 0
+        return ratio
+
+    gear_ratios = scipy.ndimage.labeled_comprehension(
+        df, gear_regions, labels, gear_ratios_in_region, int, 0, pass_positions=True
+    )
 
     part2 = sum(gear_ratios)
+    breakpoint()
 
     if str(filename).endswith("inputs/01"):
         assert part1 == 533775
