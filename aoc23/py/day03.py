@@ -17,7 +17,7 @@ import scipy
 from scipy.ndimage import (
     generate_binary_structure,
     binary_dilation,
-    binary_propagation,
+    binary_propagation as propagation,
     label,
 )
 
@@ -50,25 +50,24 @@ def day03(filename):
     digits_bordering_symbols = (
         binary_dilation(df.isin(real_symbols), friends) & maybe_parts
     )
-    parts_bordering_symbols = df.where(
-        binary_propagation(digits_bordering_symbols, leftright, mask=maybe_parts)
+    parts_bordering_symbols = propagation(
+        digits_bordering_symbols, leftright, mask=maybe_parts
     )
     # Part numbers are separated by nans. Turn into one string with numbers separated by whitespace
-    number_string = "".join(
-        parts_bordering_symbols.fillna(" ").values.reshape(1, df.size).tolist()[0]
+    parts_bordering_symbols_padded = (
+        df[maybe_parts]
+        .fillna(" ")
+        .where(binary_dilation(parts_bordering_symbols, leftright))
     )
+    number_string = "".join(parts_bordering_symbols_padded.stack())
     # Split the number string and make real ints
     part_numbers = [int(number) for number in number_string.split()]
-
     part1 = sum(part_numbers)
 
-    gears = df == "*"
-    gear_ratios = []
-    # breakpoint()
-
     # Label each connected component containing a gear
+    gears = df == "*"
     gear_regions, nregions = label(
-        binary_propagation(gears, friends, mask=maybe_parts), friends
+        propagation(gears, friends, mask=maybe_parts), friends
     )
     labels = np.arange(1, nregions + 1)
 
@@ -76,6 +75,14 @@ def day03(filename):
         emit = []
         accum = []
         prevpos = None
+        # labeled_comprehension may (and WILL) give the values of the digit
+        # cells bordering on a gear in a non-linear order. That's fine when
+        # you're using np.mean but for us the order of the digits actually
+        # matters.
+        #
+        # Sort by the (linear) position in the numpy array. Legitimate engine
+        # part numbers will then be a sequence of positions increasing by
+        # exactly 1.
         for pos, val in sorted(zip(positions, gear_region)):
             if val == "*":
                 continue
@@ -99,7 +106,6 @@ def day03(filename):
     )
 
     part2 = sum(gear_ratios)
-    breakpoint()
 
     if str(filename).endswith("inputs/01"):
         assert part1 == 533775
