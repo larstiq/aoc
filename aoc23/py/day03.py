@@ -106,43 +106,33 @@ def day03(filename):
 
     gears = df.isin(set('*'))
 
-    real_gear_pos = (df == 0)
+    gear_ratios = []
+
     for gear_pos in df[gears].stack().index:
         block = df[gear_pos[0] -1:gear_pos[0] + 2][[gear_pos[1] - 1, gear_pos[1], gear_pos[1] + 1]]
         labels, nb = scipy.ndimage.label(block.isin(set(string.digits)))
         if nb > 1:
+            real_gear_pos = (df == 0)
             real_gear_pos[gear_pos[1]][gear_pos[0]] = True
+            prev = maybe_partts
+            nextn = scipy.ndimage.binary_dilation(real_gear_pos, structure) & maybe_partts
+            leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
 
-    prev = maybe_partts
-    nextn = scipy.ndimage.binary_dilation(real_gear_pos, structure) & maybe_partts
-    leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
+            wat = 0
+            while not prev.equals(nextn):
+                wat += 1
+                prev = nextn
+                nextn = scipy.ndimage.binary_dilation(nextn, leftright) & maybe_partts
 
-    wat = 0
-    while not prev.equals(nextn):
-        wat += 1
-        prev = nextn
-        nextn = scipy.ndimage.binary_dilation(nextn, leftright) & maybe_partts
-
-    display_blizzards(df[nextn])
-    breakpoint()
+            #display_blizzards(df[nextn])
+            lelijk = [int(x) for x in ''.join(''.join(row) for row in df[nextn].fillna(" ").values).split(" ") if x != '']
+            gear_ratios.append(math.prod(lelijk))
 
 
-
-    prev = maybe_partts
-    nextn = scipy.ndimage.binary_dilation(gears, structure) & maybe_partts
-    leftright = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
-
-    wat = 0
-    while not prev.equals(nextn):
-        wat += 1
-        prev = nextn
-        nextn = scipy.ndimage.binary_dilation(nextn, leftright) & maybe_partts
-        display_blizzards(df[nextn & ~prev])
-
-    breakpoint()
 
     print(df)
     part1 = sum(parts)
+    part2 = sum(gear_ratios)
     print("part1:", part1)
     print("part2:", part2)
 
