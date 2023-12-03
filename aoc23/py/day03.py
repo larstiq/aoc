@@ -50,23 +50,20 @@ def day03(filename):
     digits_bordering_symbols = (
         binary_dilation(df.isin(real_symbols), friends) & maybe_parts
     )
-    parts_bordering_symbols = (
+    parts_bordering_symbols = df.where(
         binary_propagation(digits_bordering_symbols, leftright, mask=maybe_parts)
-        & maybe_parts
     )
-    # Use the visual separation to make a list of contiguous numbers
-    part_numbers = [
-        int(x)
-        for x in "".join(
-            "".join(row) for row in df[parts_bordering_symbols].fillna(" ").values
-        ).split(" ")
-        if x != ""
-    ]
+    # Part numbers are separated by nans. Turn into one string with numbers separated by whitespace
+    aap = ''.join(parts_bordering_symbols.fillna(' ').values.reshape(1, df.size).tolist()[0])
+    # Split the number string and make real ints
+    part_numbers = [int(number) for number in aap.split()]
+
     part1 = sum(part_numbers)
 
 
-    gears = df.isin(set("*"))
+    gears = df == "*"
     gear_ratios = []
+    breakpoint()
 
     for gear_pos in df[gears].stack().index:
         block = df[gear_pos[0] - 1 : gear_pos[0] + 2][
@@ -80,18 +77,14 @@ def day03(filename):
             digits_bordering_gears = (
                 binary_dilation(real_gear_pos, friends) & maybe_parts
             )
-            parts_bordering_gears = (
+            parts_bordering_gears = df.where(
                 binary_propagation(digits_bordering_gears, leftright, mask=maybe_parts)
-                & maybe_parts
             )
-            lelijk = [
-                int(x)
-                for x in "".join(
-                    "".join(row) for row in df[parts_bordering_gears].fillna(" ").values
-                ).split(" ")
-                if x != ""
-            ]
-            gear_ratios.append(math.prod(lelijk))
+            # Part numbers are separated by nans. Turn into one string with numbers separated by whitespace
+            hond = ''.join(parts_bordering_gears.fillna(' ').values.reshape(1, df.size).tolist()[0])
+            # Split the number string and make real ints
+            part_numbers = [int(number) for number in hond.split()]
+            gear_ratios.append(math.prod(part_numbers))
 
     part2 = sum(gear_ratios)
 
