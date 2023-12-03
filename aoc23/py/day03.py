@@ -54,11 +54,11 @@ def day03(filename):
         binary_propagation(digits_bordering_symbols, leftright, mask=maybe_parts)
     )
     # Part numbers are separated by nans. Turn into one string with numbers separated by whitespace
-    aap = "".join(
+    number_string = "".join(
         parts_bordering_symbols.fillna(" ").values.reshape(1, df.size).tolist()[0]
     )
     # Split the number string and make real ints
-    part_numbers = [int(number) for number in aap.split()]
+    part_numbers = [int(number) for number in number_string.split()]
 
     part1 = sum(part_numbers)
 
