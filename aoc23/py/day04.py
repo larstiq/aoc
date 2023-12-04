@@ -29,13 +29,21 @@ def day04(filename):
             cards[cid] = (win, have)
 
 
+    copies = Counter(cards.keys())
     points = []
-    for (win, have) in cards.values():
+    for cid, (win, have) in cards.items():
         inter = len(win.intersection(have))
         if inter > 0:
             points.append(2**(inter - 1))
 
+        orig = copies[cid]
+
+        up = Counter({ccid: orig for ccid in range(cid + 1, cid + inter + 1)})
+        copies += up
+
+
     part1 = sum(points)
+    part2 = sum(copies.values())
 
     print("part1:", part1)
     print("part2:", part2)

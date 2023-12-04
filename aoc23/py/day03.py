@@ -54,9 +54,9 @@ def day03(filename):
         digits_bordering_symbols, leftright, mask=maybe_parts
     )
     # Part numbers are separated by nans. Turn into one string with numbers separated by whitespace
+    digits_and_spaces = df[maybe_parts].fillna(" ")
     parts_bordering_symbols_padded = (
-        df[maybe_parts]
-        .fillna(" ")
+        digits_and_spaces
         .where(binary_dilation(parts_bordering_symbols, leftright))
     )
     number_string = "".join(parts_bordering_symbols_padded.stack())
@@ -70,6 +70,7 @@ def day03(filename):
         propagation(gears, friends, mask=maybe_parts), friends
     )
     labels = np.arange(1, nregions + 1)
+    padded_gear_regions = digits_and_spaces.where(binary_dilation(gear_regions))
 
     def gear_ratios_in_region(gear_region, positions):
         emit = []
