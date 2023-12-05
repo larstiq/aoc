@@ -68,12 +68,17 @@ def day05(filename):
                         carry.append(seed_range)
                         continue
                     elif seed_range.stop == out_range.start:
+                        print("SINGLETON!")
+                        #breakpoint()
                         next_state.append(shift + Interval(seed_range.stop, seed_range.stop))
-                        # TODO: assert single item interval
+                        assert seed_range.start < seed_range.stop
                         carry.append(Interval(seed_range.start, seed_range.stop - 1))
                         continue
                     elif seed_range.start == out_range.stop:
+                        print("SINGLETON!")
+                        #breakpoint()
                         next_state.append(shift + Interval(seed_range.start, seed_range.start))
+                        assert seed_range.start < seed_range.stop
                         carry.append(Interval(seed_range.start + 1, seed_range.stop))
                         continue
 
@@ -108,7 +113,7 @@ def day05(filename):
     starts = {interval.start for interval in current}
     startstwee = {interval.start for interval in next_state}
     part2 = min(starts)
-    breakpoint()
+    # breakpoint()
 
     print("part1:", part1)
     print("part2:", part2)
