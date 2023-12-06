@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 
+from sympy import solve, integrate
+from math import ceil, floor
 
 def day06(filename):
     print()
@@ -28,22 +30,33 @@ def day06(filename):
                 distances.extend(map(int, right.split()))
 
 
-    times = [56717999]
-    distances = [334113513502430]
+    from sympy.abc import t, T, N
+    race_win_boundaries = solve((T - t)*t - N, t)
+
+    def ways_to_win(time, distance):
+        concrete = dict(T=time, N=distance)
+        exact_lower = race_win_boundaries[0].subs(concrete).evalf()
+        exact_upper = race_win_boundaries[1].subs(concrete).evalf()
+        # When the solution is exactly an integer we need to step 1 away to beat the score
+        lower = int(exact_lower + 1) if exact_lower % 1 == 0 else ceil(exact_lower)
+        upper = int(exact_upper - 1) if exact_upper % 1 == 0 else floor(exact_upper)
+        return 1 + upper - lower
+
+
     wins = []
-    for ix, time in enumerate(times):
-        # Charge all the time won't move
-        local_wins = 0
-        for y in range(time):
-            if (time - y) * y > distances[ix]:
-                local_wins += 1
+    for time, distance in zip(times, distances):
+        wins.append(ways_to_win(time, distance))
 
-        #sum(1 to N, (N - x)*x) = sum(1 to N) x*N - x*2 = N * sum (1 to N) x - sum(1 to N) x*2
+    part1 = math.prod(wins)
 
-        wins.append(local_wins)
+    # Part2
+    bigtime = int("".join(map(str, times)))
+    bigdist = int("".join(map(str, distances)))
 
-    part1 = wins
-    print(times, distances)
+    part2 = 1 + math.floor(race_win_boundaries[1].subs(dict(T=bigtime, N=bigdist))) -  math.ceil(race_win_boundaries[0].subs(dict(T=bigtime, N=bigdist)))
+
+
+    print(times, distances, wins)
     print("part1:", part1)
     print("part2:", part2)
 
