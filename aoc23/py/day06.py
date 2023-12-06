@@ -2,8 +2,9 @@
 
 from utils import examples, inputs
 
-from sympy import solve, integrate
-from math import ceil, floor, prod
+from sympy import solveset, S
+import math
+
 
 def day06(filename):
     print()
@@ -22,32 +23,22 @@ def day06(filename):
             if left == "Distance":
                 distances.extend(map(int, right.split()))
 
-
-    from sympy.abc import t, T, N
-    race_win_boundaries = solve((T - t)*t - N, t)
+    from sympy.abc import t
 
     def ways_to_win(time, distance):
-        concrete = dict(T=time, N=distance)
-        exact_lower = race_win_boundaries[0].subs(concrete).evalf()
-        exact_upper = race_win_boundaries[1].subs(concrete).evalf()
-        # When the solution is exactly an integer we need to step 1 away to beat the score
-        lower = int(exact_lower + 1) if exact_lower % 1 == 0 else ceil(exact_lower)
-        upper = int(exact_upper - 1) if exact_upper % 1 == 0 else floor(exact_upper)
-        return 1 + upper - lower
-
+        return len(solveset((time - t) * t > distance, t, domain=S.Integers))
 
     wins = []
     for time, distance in zip(times, distances):
         wins.append(ways_to_win(time, distance))
 
-    part1 = prod(wins)
+    part1 = math.prod(wins)
 
-    # Part2
+    # Part2 oh no kerning
     bigtime = int("".join(map(str, times)))
     bigdist = int("".join(map(str, distances)))
 
-    part2 = 1 + floor(race_win_boundaries[1].subs(dict(T=bigtime, N=bigdist))) -  ceil(race_win_boundaries[0].subs(dict(T=bigtime, N=bigdist)))
-
+    part2 = ways_to_win(bigtime, bigdist)
 
     print(times, distances, wins)
     print("part1:", part1)
