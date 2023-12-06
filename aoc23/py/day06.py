@@ -1,16 +1,9 @@
 #!/usr/bin/env python
 
-import math
-from collections import Counter, defaultdict, deque
-
 from utils import examples, inputs
 
-import numpy as np
-import pandas as pd
-import networkx as nx
-
 from sympy import solve, integrate
-from math import ceil, floor
+from math import ceil, floor, prod
 
 def day06(filename):
     print()
@@ -47,13 +40,13 @@ def day06(filename):
     for time, distance in zip(times, distances):
         wins.append(ways_to_win(time, distance))
 
-    part1 = math.prod(wins)
+    part1 = prod(wins)
 
     # Part2
     bigtime = int("".join(map(str, times)))
     bigdist = int("".join(map(str, distances)))
 
-    part2 = 1 + math.floor(race_win_boundaries[1].subs(dict(T=bigtime, N=bigdist))) -  math.ceil(race_win_boundaries[0].subs(dict(T=bigtime, N=bigdist)))
+    part2 = 1 + floor(race_win_boundaries[1].subs(dict(T=bigtime, N=bigdist))) -  ceil(race_win_boundaries[0].subs(dict(T=bigtime, N=bigdist)))
 
 
     print(times, distances, wins)
