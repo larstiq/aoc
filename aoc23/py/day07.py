@@ -21,15 +21,13 @@ def day07(filename):
 
     mapping = dict(zip(reversed("AKQJT98765432"), itertools.count()))
     def key(c):
-        twee = list(reversed(sorted(Counter(c).values())))[:2]
-        if len(twee) < 2:
-            twee.append(0)
-        twee += [mapping[k] for k in c]
-        return twee
+        return  sorted(Counter(c).values(), reverse=True) + [mapping[k] for k in c]
 
     mapping2 = dict(zip(reversed("AKQT98765432J"), itertools.count()))
     def key2(c):
         counted = Counter(c)
+        if "J" in c and c != "JJJJJ":
+            counted
         if 'J' in counted:
            jcount = counted["J"] 
            del counted["J"]
@@ -40,16 +38,21 @@ def day07(filename):
                counted["J"] = jcount
 
         twee = list(reversed(sorted(counted.values())))[:2]
-        if len(twee) < 2:
-            twee.append(0)
         twee += [mapping2[k] for k in c]
         return twee
     
     part1 = sum((ix + 1)*hands[hand] for ix, hand in enumerate(sorted(hands, key=key)))
     part2 = sum((ix + 1)*hands[hand] for ix, hand in enumerate(sorted(hands, key=key2)))
+
+    if str(filename).endswith("inputs/07"):
+        assert part1 == 248113761
+        assert part2 == 246285222
+    else:
+        assert part1 == 6440
+        assert part2 == 5905
+
     print("part1:", part1)
     print("part2:", part2)
-    breakpoint()
 
 
 day07(examples("07"))
