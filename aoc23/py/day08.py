@@ -29,17 +29,23 @@ def day08(filename):
 
 
     i = 0
-    current = "AAA"
+    currents = [node for node in maps if node.endswith("A")]
 
     repeating = itertools.cycle(instructions)
+    seens = set()
     while True:
         ins = 0 if next(repeating) == "L" else 1
-        next_step = maps[current][ins]
-        print(next_step)
+        next_steps = [maps[cur][ins] for cur in currents]
+
+        key = (tuple(next_steps), ins)
+        if key in seens:
+            breakpoint()
+        print(next_steps)
+        seens.add(key)
         i += 1
-        if next_step == "ZZZ":
+        if all(n.endswith("Z") for n in next_steps):
             break
-        current = next_step
+        currents = next_steps
 
 
     print(i)
