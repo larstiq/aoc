@@ -9,9 +9,6 @@ def day09(filename):
     print()
     print(filename)
 
-    part1 = 0
-    part2 = 0
-
     histories = np.loadtxt(filename, dtype=int)
 
     def delve(history):
