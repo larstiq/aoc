@@ -167,15 +167,9 @@ def day10(filename):
     groot_recht = scipy.ndimage.binary_fill_holes(echt_recht) & ~aap
     groot_links = scipy.ndimage.binary_fill_holes(echt_links) & ~aap
 
-    display_field(df.where(groot_links))
-
-    
-
-    for node in seen:
-        if len(graph[node]) != 2:
-            print(node)
-
     part1 = math.ceil((len(seen) - 1) / 2)
+    inflated = ddf.where(scipy.ndimage.binary_fill_holes(pijp)).stack().value_counts()
+    part2 = inflated.loc[~inflated.index.isin(('P', 'M'))].sum()
     print("part1:", part1)
     print("part2:", part2)
     breakpoint()
