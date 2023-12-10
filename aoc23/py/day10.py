@@ -3,11 +3,12 @@
 import math
 from collections import Counter, defaultdict, deque
 
-from utils import examples, inputs, display_field
+from utils import examples, inputs, display_field, display_dfield
 
 import numpy as np
 import pandas as pd
 import networkx as nx
+import scipy
 
 
 def day10(filename):
@@ -43,134 +44,79 @@ def day10(filename):
                 elif char == "F":
                     graph.add_edge((row, column), (row + 1, column))
                     graph.add_edge((row, column), (row, column + 1))
-                elif char == "S":
-                    if str(filename).endswith("inputs/10"):
-                       graph.add_edge((row, column), (row - 1, column))
-                       graph.add_edge((row, column), (row + 1, column))
-                    else:
-                       graph.add_edge((row, column), (row, column - 1))
-                       graph.add_edge((row, column), (row + 1, column))
-
-
 
     df = pd.DataFrame(data)
     start = df[df == 'S'].stack().index[0]
 
-    #components = [component for component in nx.connected_components(graph) if start in component]
-    #for node in components:
+    neighbours = graph.to_undirected()[start]
+    assert len(neighbours) == 2
+    for node in neighbours:
+        graph.add_edge(start, node)
 
     distance = 1
-    seen = set([start, (start[0] - 1, start[1]), (start[0] + 1, start[1])])
-    seen = set([start, (start[0] - 1, start[1])])
-
     second = list(graph[start])[0]
     seen = set([start, second])
-    current = seen - set([start])
+    current = second
 
     lefthands = set()
     righthands = set()
 
-
-    if second[1] > start[1]:
-        direction = 'up'
-    elif second[1] < start[1]:
-        direction = 'down'
-    elif second[0] > start[0]:
-        direction = 'left'
-    elif second[0] < start[0]:
-        direction = 'right'
-    else:
-        print("WAT")
-        breakpoint()
-
-    #direction = 'up'
-
+    direction = second[0] - start[0], second[1] - second[0]
 
     def left(node, direction):
-        if direction == 'left':
+        # Left
+        if direction == (0, -1):
             return (node[0] + 1, node[1])
-        elif direction == 'right':
+        # Right
+        elif direction == (0, 1):
             return (node[0] - 1, node[1])
-        elif direction == 'up':
+        # Up
+        elif direction == (-1, 0):
             return (node[0], node[1] - 1)
-        elif direction == 'down':
+        # Down
+        elif direction == (1, 0):
             return (node[0], node[1] + 1)
 
     def right(node, direction):
-        if direction == 'left':
+        if direction == (0, -1):
             return (node[0] - 1, node[1])
-        elif direction == 'right':
+        elif direction == (0, 1):
             return (node[0] + 1, node[1])
-        elif direction == 'up':
+        elif direction == (-1, 0):
             return (node[0], node[1] + 1)
-        elif direction == 'down':
+        elif direction == (1, 0):
             return (node[0], node[1] - 1)
 
+
+    traversal = np.zeros(df.shape, dtype=bool)
+    traversal[start[0]][start[1]] = True
     while True:
+        maybe_left = left(current, direction)
+        maybe_right = right(current, direction)
+        if maybe_left in graph:
+            lefthands.add(maybe_left)
+        if maybe_right in graph:
+            righthands.add(maybe_right)
+        traversal[current[0]][current[1]] = True
+        display_dfield(
+                df.where(traversal).dropna(how='all').dropna(how='all', axis='columns')
+        )
+
         nexts = set()
-        for node in current:
-            if node not in graph:
-                continue
-            maybe_left = left(node, direction)
-            maybe_right = right(node, direction)
-            if maybe_left in graph:
-                lefthands.add(maybe_left)
-            if maybe_right in graph:
-                righthands.add(maybe_right)
-            nexts |= set(graph[node])
-
-        nexts -= seen
-        if len(nexts) != 2:
-            #breakpoint()
-            pass
-        seen |= nexts
-        if len(nexts) == 0:
-            print("Current is now", current)
-            #breakpoint()
+        nexts = set(graph[current]) - seen
+        print(f"Nexts for {current}: {nexts}")
+        assert len(nexts) < 2
+        nexts = list(nexts)[0]
+        seen.add(nexts)
 
         if len(nexts) == 0:
-            breakpoint()
+            assert start in graph[current]
             break
 
-        assert len(nexts) < 2
-
-        naa = list(nexts)[0]
-        naa = df[naa[1]][naa[0]]
-
-        if direction == 'left':
-            if naa == '-':
-                direction = 'left'
-            if naa == 'L':
-                direction = 'up'
-            if naa == 'F':
-                direction = 'down'
-        elif direction == 'right':
-            if naa == '-':
-                direction = 'right'
-            if naa == 'J':
-                direction = 'up'
-            if naa == '7':
-                direction = 'down'
-        elif direction == 'up':
-            if naa == '|':
-                direction = 'up'
-            if naa == 'F':
-                direction = 'right'
-            if naa == '7':
-                direction = 'left'
-        elif direction == 'down':
-            if naa == '|':
-                direction = 'down'
-            if naa == 'L':
-                direction = 'right'
-            if naa == 'J':
-                direction = 'left'
+        direction = (nexts[0] - current[0], nexts[1] - current[1])
         current = nexts
-        distance += 1
-
-
-    print(distance)
-    import scipy
+        import time
+        time.sleep(0.1)
 
 
     fd = df.copy()
@@ -187,16 +133,6 @@ def day10(filename):
         if node not in seen:
             hond[node[0]][node[1]] = 1
 
-
-    mier = np.zeros(df.T.shape)
-    for node in (lefthands - seen):
-        mier[node[1]][node[0]] = 1
-
-    kameel = np.zeros(df.T.shape)
-    for node in seen:
-        kameel[node[1]][node[0]] = 1
-
-
     kat = np.zeros(df.shape)
     for node in righthands:
         if node not in seen:
@@ -206,18 +142,21 @@ def day10(filename):
     #display_field(fd.T.where(mier == 1).T)
     #display_field(fd.T.where(kameel == 1).T)
     wat = scipy.ndimage.binary_propagation((hond == 1) & (aap == 0), mask=(aap==0))
-    huuu = wat & (aap == 0)
-
     taw = scipy.ndimage.binary_propagation((kat == 1) & (aap == 0), mask=(aap==0))
 
     buis_plus_binnen = scipy.ndimage.binary_fill_holes(aap == 1)
     echt_recht = buis_plus_binnen & taw 
+    echt_links = buis_plus_binnen & wat
     groot_recht = scipy.ndimage.binary_fill_holes(echt_recht) & (aap == 0)
+    groot_links = scipy.ndimage.binary_fill_holes(echt_links) & (aap == 0)
 
-    oei = scipy.ndimage.binary_propagation((mier == 1), mask=(kameel == 0))
-    display_field(fd.T.where(oei))
+    display_field(df.where(groot_links))
 
-    print("part1:", part1)
+    for node in seen:
+        if len(graph[node]) != 2:
+            print(node)
+
+    print("part1:", (len(seen) - 1) / 2)
     print("part2:", part2)
     breakpoint()
 
