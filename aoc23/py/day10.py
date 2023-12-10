@@ -28,38 +28,30 @@ def day10(filename):
                 graph.add_node((row, column), orig=char)
 
                 # Add neighbouring pipes and pieces inbetween on a doublesize grid
+                path = None
+                up    = [(row - 2, column), (row - 1, column)]
+                down  = [(row + 1, column), (row + 2, column)]
+                left  = [(row, column - 2), (row, column - 1)]
+                right = [(row, column + 1), (row, column + 2)]
+                here = (row, column) 
                 if char  == "|":
-                    graph.add_edge((row,     column), (row - 1, column))
-                    graph.add_edge((row - 1, column), (row - 2, column))
-                    graph.add_edge((row,     column), (row + 1, column))
-                    graph.add_edge((row + 1, column), (row + 2, column))
+                    path = up + [here] + down
                 elif char == "-":
-                    graph.add_edge((row, column    ), (row, column - 1))
-                    graph.add_edge((row, column - 1), (row, column - 2))
-                    graph.add_edge((row, column    ), (row, column + 1))
-                    graph.add_edge((row, column + 1), (row, column + 2))
+                    path = left + [here] + right
                 elif char == "L":
-                    graph.add_edge((row    , column    ), (row - 1, column))
-                    graph.add_edge((row - 1, column    ), (row - 2, column))
-                    graph.add_edge((row    , column    ), (row, column + 1))
-                    graph.add_edge((row    , column + 1), (row, column + 2))
+                    path = up + [here] + right
                 elif char == "J":
-                    graph.add_edge((row,     column    ), (row - 1, column))
-                    graph.add_edge((row - 1, column    ), (row - 2, column))
-                    graph.add_edge((row,     column    ), (row, column - 1))
-                    graph.add_edge((row,     column - 1), (row, column - 2))
+                    pat = up + [here] + [left[1], left[0]]
                 elif char == "7":
-                    graph.add_edge((row,     column    ), (row + 1, column))
-                    graph.add_edge((row + 1, column    ), (row + 2, column))
-                    graph.add_edge((row,     column    ), (row, column - 1))
-                    graph.add_edge((row,     column - 1), (row, column - 2))
+                    path = left + [here] + down
                 elif char == "F":
-                    graph.add_edge((row,     column    ), (row + 1, column))
-                    graph.add_edge((row + 1, column    ), (row + 2, column))
-                    graph.add_edge((row,     column    ), (row, column + 1))
-                    graph.add_edge((row,     column + 1), (row, column + 2))
+                    path = [right[1], right[0]] + [here] + down
                 elif char == "S":
                     start = (row, column)
+
+                if path:
+                    nx.add_path(graph, path)
+                    nx.add_path(graph, reversed(path))
 
 
     # What did the starting point connect to?
@@ -107,6 +99,7 @@ def day10(filename):
     part2 = inflated.stack().value_counts().sum()
     print("part1:", part1)
     print("part2:", part2)
+    #breakpoint()
 
 
 day10(examples("10"))
