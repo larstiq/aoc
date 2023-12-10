@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import scipy
+import time
 
 
 def day10(filename):
@@ -47,12 +48,9 @@ def day10(filename):
 
     df = pd.DataFrame(data)
 
-    import itertools
-    # Maybe arange or shift with 0.5 or something
-
+    # Double the grid so what looks enclosed but is on the outside
+    # has a connection to the outside
     ddf = pd.DataFrame(data=np.nan, columns=np.arange(0, df.columns[-1] + .5, .5), index=np.arange(0, df.index[-1] + .5, .5)).combine_first(df).fillna('M')
-
-
     start = df[df == 'S'].stack().index[0]
 
     neighbours = graph.to_undirected()[start]
@@ -62,8 +60,8 @@ def day10(filename):
 
     distance = 1
     second = list(graph[start])[0]
-    seen = set([start, second])
     current = second
+    seen = set([start, second])
 
     lefthands = set()
     righthands = set()
@@ -95,9 +93,11 @@ def day10(filename):
             return (node[0], node[1] - 1)
 
 
-    traversal = np.zeros(df.shape, dtype=bool)
-    traversal[start[0]][start[1]] = True
-    import time
+    animation = False
+    if animation:
+        traversal = np.zeros(df.shape, dtype=bool)
+        traversal[start[0]][start[1]] = True
+
     while True:
         maybe_left = left(current, direction)
         maybe_right = right(current, direction)
@@ -105,16 +105,14 @@ def day10(filename):
             lefthands.add(maybe_left)
         if maybe_right in graph:
             righthands.add(maybe_right)
-        traversal[current[0]][current[1]] = True
 
-        #if len(seen) > 12000:
-        #    display_dfield(
-        #            df.where(traversal).dropna(how='all').dropna(how='all', axis='columns')
-        #    )
-        #    time.sleep(0.0001)
-        #print(f"Nexts for {current}: {nexts} pipelenght {len(seen)}")
+        if animation:
+            traversal[current[0]][current[1]] = True
+            display_dfield(
+                    df.where(traversal).dropna(how='all').dropna(how='all', axis='columns')
+            )
+            time.sleep(0.0001)
 
-        nexts = set()
         nexts = set(graph[current]) - seen
         assert len(nexts) < 2
 
@@ -129,44 +127,18 @@ def day10(filename):
         current = nexts
         distance += 1
 
-    print("Maak")
+    print("Connecting the pipes in the doubled grid")
     for edge in graph.edges(seen):
         mid = (edge[0][0] + edge[1][0])/2, (edge[0][1] + edge[1][1])/ 2
         ddf[mid[1]][mid[0]] = 'P'
-    print("Klaar")
+    # And pipes on the original grid
 
-    
-    fd = df.copy()
-
-    aap = np.zeros(df.shape, dtype=bool)
     for node in seen:
-        aap[node[0]][node[1]] = True
         ddf[node[1]][node[0]] = 'P'
 
+    print("... done connecting the pipes")
+
     pijp = ddf == 'P'
-    
-    assert set(df.where(aap == 1).stack().index) == seen
-
-    hond = np.zeros(df.shape, dtype=bool)
-    for node in lefthands:
-        if node not in seen:
-            hond[node[0]][node[1]] = True
-
-    kat = np.zeros(df.shape, dtype=bool)
-    for node in righthands:
-        if node not in seen:
-            kat[node[0]][node[1]] = True
-
-
-    wat = scipy.ndimage.binary_propagation(hond & ~aap, mask=~aap)
-    taw = scipy.ndimage.binary_propagation(kat & ~aap, mask=~aap)
-
-    buis_plus_binnen = scipy.ndimage.binary_fill_holes(aap)
-    echt_recht = buis_plus_binnen & taw 
-    echt_links = buis_plus_binnen & wat
-    groot_recht = scipy.ndimage.binary_fill_holes(echt_recht) & ~aap
-    groot_links = scipy.ndimage.binary_fill_holes(echt_links) & ~aap
-
     part1 = math.ceil((len(seen) - 1) / 2)
     inflated = ddf.where(scipy.ndimage.binary_fill_holes(pijp)).stack().value_counts()
     part2 = inflated.loc[~inflated.index.isin(('P', 'M'))].sum()
