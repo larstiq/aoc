@@ -46,6 +46,13 @@ def day10(filename):
                     graph.add_edge((row, column), (row, column + 1))
 
     df = pd.DataFrame(data)
+
+    import itertools
+    # Maybe arange or shift with 0.5 or something
+
+    ddf = pd.DataFrame(data=np.nan, columns=np.arange(0, df.columns[-1] + .5, .5), index=np.arange(0, df.index[-1] + .5, .5)).combine_first(df).fillna('M')
+
+
     start = df[df == 'S'].stack().index[0]
 
     neighbours = graph.to_undirected()[start]
@@ -90,6 +97,7 @@ def day10(filename):
 
     traversal = np.zeros(df.shape, dtype=bool)
     traversal[start[0]][start[1]] = True
+    import time
     while True:
         maybe_left = left(current, direction)
         maybe_right = right(current, direction)
@@ -98,65 +106,77 @@ def day10(filename):
         if maybe_right in graph:
             righthands.add(maybe_right)
         traversal[current[0]][current[1]] = True
-        display_dfield(
-                df.where(traversal).dropna(how='all').dropna(how='all', axis='columns')
-        )
+
+        #if len(seen) > 12000:
+        #    display_dfield(
+        #            df.where(traversal).dropna(how='all').dropna(how='all', axis='columns')
+        #    )
+        #    time.sleep(0.0001)
+        #print(f"Nexts for {current}: {nexts} pipelenght {len(seen)}")
 
         nexts = set()
         nexts = set(graph[current]) - seen
-        print(f"Nexts for {current}: {nexts}")
         assert len(nexts) < 2
-        nexts = list(nexts)[0]
-        seen.add(nexts)
 
         if len(nexts) == 0:
             assert start in graph[current]
             break
 
+        nexts = list(nexts)[0]
+        seen.add(nexts)
+
         direction = (nexts[0] - current[0], nexts[1] - current[1])
         current = nexts
-        import time
-        time.sleep(0.1)
+        distance += 1
 
+    print("Maak")
+    for edge in graph.edges(seen):
+        mid = (edge[0][0] + edge[1][0])/2, (edge[0][1] + edge[1][1])/ 2
+        ddf[mid[1]][mid[0]] = 'P'
+    print("Klaar")
 
+    
     fd = df.copy()
 
-    aap = np.zeros(df.shape)
+    aap = np.zeros(df.shape, dtype=bool)
     for node in seen:
-        aap[node[0]][node[1]] = 1
-        fd[node[1]][node[0]] = 'P'
+        aap[node[0]][node[1]] = True
+        ddf[node[1]][node[0]] = 'P'
+
+    pijp = ddf == 'P'
     
     assert set(df.where(aap == 1).stack().index) == seen
 
-    hond = np.zeros(df.shape)
+    hond = np.zeros(df.shape, dtype=bool)
     for node in lefthands:
         if node not in seen:
-            hond[node[0]][node[1]] = 1
+            hond[node[0]][node[1]] = True
 
-    kat = np.zeros(df.shape)
+    kat = np.zeros(df.shape, dtype=bool)
     for node in righthands:
         if node not in seen:
-            kat[node[0]][node[1]] = 1
+            kat[node[0]][node[1]] = True
 
 
-    #display_field(fd.T.where(mier == 1).T)
-    #display_field(fd.T.where(kameel == 1).T)
-    wat = scipy.ndimage.binary_propagation((hond == 1) & (aap == 0), mask=(aap==0))
-    taw = scipy.ndimage.binary_propagation((kat == 1) & (aap == 0), mask=(aap==0))
+    wat = scipy.ndimage.binary_propagation(hond & ~aap, mask=~aap)
+    taw = scipy.ndimage.binary_propagation(kat & ~aap, mask=~aap)
 
-    buis_plus_binnen = scipy.ndimage.binary_fill_holes(aap == 1)
+    buis_plus_binnen = scipy.ndimage.binary_fill_holes(aap)
     echt_recht = buis_plus_binnen & taw 
     echt_links = buis_plus_binnen & wat
-    groot_recht = scipy.ndimage.binary_fill_holes(echt_recht) & (aap == 0)
-    groot_links = scipy.ndimage.binary_fill_holes(echt_links) & (aap == 0)
+    groot_recht = scipy.ndimage.binary_fill_holes(echt_recht) & ~aap
+    groot_links = scipy.ndimage.binary_fill_holes(echt_links) & ~aap
 
     display_field(df.where(groot_links))
+
+    
 
     for node in seen:
         if len(graph[node]) != 2:
             print(node)
 
-    print("part1:", (len(seen) - 1) / 2)
+    part1 = math.ceil((len(seen) - 1) / 2)
+    print("part1:", part1)
     print("part2:", part2)
     breakpoint()
 
