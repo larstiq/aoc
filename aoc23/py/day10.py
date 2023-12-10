@@ -61,6 +61,8 @@ def day10(filename):
     distance = 1
     seen = set([start, (start[0] - 1, start[1]), (start[0] + 1, start[1])])
     current = seen - set([start])
+
+    left
     while True:
         nexts = set()
         for node in current:
@@ -68,11 +70,12 @@ def day10(filename):
 
         nexts -= seen
         if len(nexts) != 2:
-            breakpoint()
+            #breakpoint()
+            pass
         seen |= nexts
         if len(nexts) == 0:
             print("Current is now", current)
-            breakpoint()
+            #breakpoint()
         current = nexts
         distance += 1
 
@@ -83,7 +86,14 @@ def day10(filename):
     #fd = df.copy()
     #for pos in components[0]:
     #    fd[pos[1]][pos[0]] = 'Z'
+    import scipy
 
+    aap = np.zeros(df.shape)
+    for node in seen:
+        aap[node[0]][node[1]] = 1
+    
+    assert set(df.where(aap == 1).stack().index) == seen
+    hrmf = [foo for foo in df.where(scipy.ndimage.binary_fill_holes(aap) != aap).stack().index if foo not in seen]
 
     print("part1:", part1)
     print("part2:", part2)
