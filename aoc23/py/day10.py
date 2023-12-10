@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 
-import math
-from collections import Counter, defaultdict, deque
-
-from utils import examples, inputs, display_field, display_dfield
+from utils import examples, inputs
 
 import numpy as np
 import pandas as pd
 import networkx as nx
 import scipy
-import time
 
 
 def day10(filename):
@@ -21,7 +17,6 @@ def day10(filename):
 
     data = []
     graph = nx.DiGraph()
-    chars = {}
 
     with open(filename) as puzzlein:
         for halfrow, line in enumerate(puzzlein):
@@ -31,10 +26,6 @@ def day10(filename):
                 column = 2 * halfcolumn
 
                 graph.add_node((row, column), orig=char)
-                chars[(row, column)] = char
-
-                if (row, column) == (35, 208):
-                    breakpoint()
 
                 # Add neighbouring pipes and pieces inbetween on a doublesize grid
                 if char  == "|":
@@ -70,6 +61,8 @@ def day10(filename):
                 elif char == "S":
                     start = (row, column)
 
+
+    # What did the starting point connect to?
     neighbours = graph.to_undirected()[start]
     assert len(neighbours) == 2
     for node in neighbours:
@@ -77,82 +70,45 @@ def day10(filename):
         diff = node[0] - start[0], node[1] - start[1]
         extended = (node[0] + diff[0], node[1] + diff[1])
         graph.add_edge(node, extended)
-        print("Start neighbours", start, node, extended)
 
-    distance = 1
+
+    # Find the loop of pipe containing the start
     second = list(graph[start])[0]
     current = second
     seen = set([start, second])
 
-    lefthands = set()
-    righthands = set()
-
-    direction = second[0] - start[0], second[1] - start[1]
-
-    def left(node, direction):
-        # Left
-        if direction == (0, -1):
-            return (node[0] + 1, node[1])
-        # Right
-        elif direction == (0, 1):
-            return (node[0] - 1, node[1])
-        # Up
-        elif direction == (-1, 0):
-            return (node[0], node[1] - 1)
-        # Down
-        elif direction == (1, 0):
-            return (node[0], node[1] + 1)
-
-    def right(node, direction):
-        if direction == (0, -1):
-            return (node[0] - 1, node[1])
-        elif direction == (0, 1):
-            return (node[0] + 1, node[1])
-        elif direction == (-1, 0):
-            return (node[0], node[1] + 1)
-        elif direction == (1, 0):
-            return (node[0], node[1] - 1)
-
-
-    while True:
-        maybe_left = left(current, direction)
-        maybe_right = right(current, direction)
-        if maybe_left in graph:
-            lefthands.add(maybe_left)
-        if maybe_right in graph:
-            righthands.add(maybe_right)
-
-        nexts = set(graph[current]) - seen
-        assert len(nexts) < 2
-
-        if len(nexts) == 0:
-            assert start in graph[current]
+    while current != start:
+        followings = set(graph[current]) - seen
+        if len(followings) == 0:
+            assert current in graph[start]
             break
 
-        nexts = list(nexts)[0]
-        seen.add(nexts)
+        following, = followings
+        
+        seen.add(following)
+        current = following
 
-        direction = (nexts[0] - current[0], nexts[1] - current[1])
-        current = nexts
-        distance += 1
-
+    # We have inserted extra pieces in the pipe so the original halfway point is at a fourth
     part1 = len(seen) // 4
 
+    # Mark all doubled-grid points with original/spliced pipe 
     pijp = np.zeros((2 * len(data), 2 * len(data[0])), dtype=bool)
     for node in seen:
-        pijp[node[1]][node[0]] = True
+        pijp[node[0]][node[1]] = True
 
+    # Original grid with doubled coordinates
     df = pd.DataFrame(data=data, index=range(0, pijp.shape[0], 2), columns=range(0, pijp.shape[1], 2))
+    # Double grid with nans or original data at doubled grid points
     ddf = pd.DataFrame(data=np.nan, index=range(0, pijp.shape[0]), columns=range(0, pijp.shape[1])).combine_first(df)
 
-    #inflated = ddf.where(scipy.ndimage.binary_fill_holes(pijp)).stack().value_counts()
-    inflated = ddf.where(scipy.ndimage.binary_fill_holes(pijp)).stack()
-    part2 = inflated.loc[~inflated.index.isin(('P', 'M'))].sum()
+    # Fill the holes enclosed by the pipe in the doubled grid, and remove the pipe
+    inflated = ddf.where(scipy.ndimage.binary_fill_holes(pijp) & ~pijp)
+    # Count the number of non-nan entries, this is the number of enclosed original tiles
+    part2 = inflated.stack().value_counts().sum()
     print("part1:", part1)
     print("part2:", part2)
-    breakpoint()
 
 
-#day10(examples("10"))
+day10(examples("10"))
 day10(inputs("10"))
-#day10(examples("10-3"))
+day10(examples("10-3"))
