@@ -23,8 +23,7 @@ def day10(filename):
         for row, line in enumerate(puzzlein):
             data.append(list(line.strip()))
             for column, char in enumerate(line.strip()):
-                if char != ".":
-                    graph.add_node((row, column))
+                graph.add_node((row, column))
 
                 if char  == "|":
                     graph.add_edge((row, column), (row - 1, column))
@@ -69,6 +68,7 @@ def day10(filename):
     current = seen - set([start])
 
     lefthands = set()
+    righthands = set()
 
 
     if second[1] > start[1]:
@@ -83,7 +83,7 @@ def day10(filename):
         print("WAT")
         breakpoint()
 
-    direction = 'up'
+    #direction = 'up'
 
 
     def left(node, direction):
@@ -96,14 +96,27 @@ def day10(filename):
         elif direction == 'down':
             return (node[0], node[1] + 1)
 
+    def right(node, direction):
+        if direction == 'left':
+            return (node[0] - 1, node[1])
+        elif direction == 'right':
+            return (node[0] + 1, node[1])
+        elif direction == 'up':
+            return (node[0], node[1] + 1)
+        elif direction == 'down':
+            return (node[0], node[1] - 1)
+
     while True:
         nexts = set()
         for node in current:
             if node not in graph:
                 continue
             maybe_left = left(node, direction)
+            maybe_right = right(node, direction)
             if maybe_left in graph:
                 lefthands.add(maybe_left)
+            if maybe_right in graph:
+                righthands.add(maybe_right)
             nexts |= set(graph[node])
 
         nexts -= seen
@@ -183,11 +196,23 @@ def day10(filename):
     for node in seen:
         kameel[node[1]][node[0]] = 1
 
-    display_field(fd.T.where(mier == 1).T)
-    display_field(fd.T.where(kameel == 1).T)
+
+    kat = np.zeros(df.shape)
+    for node in righthands:
+        if node not in seen:
+            kat[node[0]][node[1]] = 1
+
+
+    #display_field(fd.T.where(mier == 1).T)
+    #display_field(fd.T.where(kameel == 1).T)
     wat = scipy.ndimage.binary_propagation((hond == 1) & (aap == 0), mask=(aap==0))
     huuu = wat & (aap == 0)
 
+    taw = scipy.ndimage.binary_propagation((kat == 1) & (aap == 0), mask=(aap==0))
+
+    buis_plus_binnen = scipy.ndimage.binary_fill_holes(aap == 1)
+    echt_recht = buis_plus_binnen & taw 
+    groot_recht = scipy.ndimage.binary_fill_holes(echt_recht) & (aap == 0)
 
     oei = scipy.ndimage.binary_propagation((mier == 1), mask=(kameel == 0))
     display_field(fd.T.where(oei))
