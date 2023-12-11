@@ -16,7 +16,7 @@ def day10(filename):
     part2 = 0
 
     data = []
-    graph = nx.DiGraph()
+    graph = nx.Graph()
 
     with open(filename) as puzzlein:
         for halfrow, line in enumerate(puzzlein):
@@ -29,10 +29,10 @@ def day10(filename):
 
                 # Add neighbouring pipes and pieces inbetween on a doublesize grid
                 path = None
-                up    = [(row - 2, column), (row - 1, column)]
-                down  = [(row + 1, column), (row + 2, column)]
-                left  = [(row, column - 2), (row, column - 1)]
-                right = [(row, column + 1), (row, column + 2)]
+                up    = [(row - 1, column)]
+                down  = [(row + 1, column)]
+                left  = [(row, column - 1)]
+                right = [(row, column + 1)]
                 here = (row, column) 
                 if char  == "|":
                     path = up + [here] + down
@@ -41,27 +41,16 @@ def day10(filename):
                 elif char == "L":
                     path = up + [here] + right
                 elif char == "J":
-                    pat = up + [here] + [left[1], left[0]]
+                    pat = up + [here] + left
                 elif char == "7":
                     path = left + [here] + down
                 elif char == "F":
-                    path = [right[1], right[0]] + [here] + down
+                    path = right + [here] + down
                 elif char == "S":
                     start = (row, column)
 
                 if path:
                     nx.add_path(graph, path)
-                    nx.add_path(graph, reversed(path))
-
-
-    # What did the starting point connect to?
-    neighbours = graph.to_undirected()[start]
-    assert len(neighbours) == 2
-    for node in neighbours:
-        graph.add_edge(start, node)
-        diff = node[0] - start[0], node[1] - start[1]
-        extended = (node[0] + diff[0], node[1] + diff[1])
-        graph.add_edge(node, extended)
 
 
     # Find the loop of pipe containing the start
@@ -102,6 +91,6 @@ def day10(filename):
     #breakpoint()
 
 
-day10(examples("10"))
+#day10(examples("10"))
 day10(inputs("10"))
-day10(examples("10-3"))
+#day10(examples("10-3"))
