@@ -33,16 +33,20 @@ def day12(filename):
     with open(filename) as puzzlein:
         for line in puzzlein:
             line = line.strip()
+            breakpoint()
             springs, counts = line.split()
+            springs = "?".join(5 * [springs])
+            counts = ",".join(5 * [counts])
             counts = counts.split(",")
             kounts = list(map(int, counts))
 
             expanded = "0".join("1" * int(leng) for leng in counts) 
 
-           # if "." in springs:
-           #     knowns = [piece for piece in springs.split(".") if piece != '']
-           # else:
-           #     knowns = springs
+            #if "." in springs:
+            #    knowns = [piece for piece in springs.split(".") if piece != '']
+            #else:
+            #    knowns = springs
+
 
             replaced = "0".join(piece for piece in springs.replace("#", '1').split(".") if piece != "")
             # Regexify
