@@ -9,6 +9,8 @@ import numpy as np
 import networkx as nx
 import itertools
 import math
+import re
+import exrex
 
 
 def day12(filename):
@@ -26,64 +28,66 @@ def day12(filename):
     unsolved = []
     parts = {}
 
+    grandcounts = []
+    replacings = []
     with open(filename) as puzzlein:
         for line in puzzlein:
-            grandcount = 1
+            line = line.strip()
             springs, counts = line.split()
+            counts = counts.split(",")
+            kounts = list(map(int, counts))
 
-            if "." in springs:
-                knowns = [piece for piece in springs.split(".") if piece != '']
-            else:
-                knowns = springs
+            expanded = "0".join("1" * int(leng) for leng in counts) 
 
-            unmatched = counts
-            matched = []
+           # if "." in springs:
+           #     knowns = [piece for piece in springs.split(".") if piece != '']
+           # else:
+           #     knowns = springs
 
-            for pp in knowns:
-                if pp in parts:
-                    options = parts[pp]
-                else:
-                    if all(x == "#" for x in pp):
-                        options = [str(len(pp))]
-                    else:
-                        options = []
-                        aap = pp.replace('#', '1')
-                        preaap = []
-                        import string
-                        for rep, orig in zip(string.ascii_letters, aap):
-                            chois = orig if orig == '1' else rep
-                            preaap.append(chois)
-
-                        postaap = ''.join(preaap)
-
-                        for ix in range(2**sum(c == '?' for c in pp)):
-                            hond = bin(2**40 + ix)[-len(pp):]
-
-                            replacements = dict(zip([ch for ch in postaap if ch != '1'], hond))
-
-                            prereplaced = []
-                            for ch in postaap:
-                                if ch == '1':
-                                    prereplaced.append(ch)
-                                else:
-                                    prereplaced.append(replacements[ch])
-
-                            postreplaced = ''.join(prereplaced)
-
-                            subcounts = [str(sum(1 for _ in group)) for label, group in itertools.groupby('0001101')]
-                            options.append(subcounts)
-
-                    parts[pp] = options
-
-                piececount = 0
-                for opt in options:
-                    if counts.startswith(alt + ",".join(opt)):
+            replaced = "0".join(piece for piece in springs.replace("#", '1').split(".") if piece != "")
+            # Regexify
+            replaced = replaced.replace("?", "(0|1){0,1}")
 
 
+            simpler = "^" + line.replace("?", "(_|-){0,1}") + "$"
 
-    print(equal, unequal)
-    df = pd.DataFrame(data)
 
+            preugh = "0".join(piece for piece in springs.replace("#", '1').split(".") if piece != "")
+
+
+            nuu = Counter(preugh)
+            tot = Counter(expanded)
+            missing = tot['1'] - nuu['1']
+            
+
+
+            options = []
+            # would it be faster per peice? eh
+            for ix in range(2**sum(c not in '01' for c in preugh)):
+                # We need exactly two bits set, can skip the rest of the number.
+                # Should this just be combinations of powers of 2?
+                # Could pick all combinations of size k amon what?
+                possible_replacement = bin(ix + 2**40)[-nuu['?']:]
+                if Counter(possible_replacement)['1'] != missing:
+                    continue
+
+                ugh = preugh
+                it = iter(possible_replacement)
+                while "?" in ugh:
+                    ugh = ugh.replace("?", next(it), 1)
+
+                #print(ugh)
+                subcounts = [str(sum(1 for _ in group)) for label, group in itertools.groupby(ugh) if label == '1']
+
+                if subcounts == counts:
+                    options.append(ugh)
+
+
+            print(line, options, len(options))
+            grandcounts.append(len(options))
+
+
+    part1 = sum(grandcounts)
     print("part1:", part1)
     print("part2:", part2)
     breakpoint()
