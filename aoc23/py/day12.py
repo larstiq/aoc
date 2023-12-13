@@ -11,7 +11,92 @@ import itertools
 import math
 import re
 import exrex
+import functools
 
+
+@functools.cache
+def multin(num, prefix):
+    # Passing in num as a combination of '?' and '#', what could it be?
+    # Maxmimum the number could be length
+    options = []
+    nuu = Counter(num)
+    for ix in range(2**sum(c not in '01' for c in num)):
+        # We need exactly two bits set, can skip the rest of the number.
+        # Should this just be combinations of powers of 2?
+        # Could pick all combinations of size k amon what?
+
+        possible_replacement = bin(ix + 2**40)[-nuu['?']:]
+
+        #if Counter(possible_replacement)['1'] != missing:
+        #   continue
+
+        ugh = num
+        it = iter(possible_replacement)
+        while "?" in ugh:
+            ugh = ugh.replace("?", next(it), 1)
+
+        #print(ugh)
+        subcounts = [str(sum(1 for _ in group)) for label, group in itertools.groupby(ugh) if label == '1']
+        
+        if subcounts == prefix[:len(subcounts]):
+            options.append(subcounts)
+    
+    return subcounts
+
+    # What about a minimum? That depends on the placement no?
+
+    # So now we're looking for decompositions 
+
+
+def delve(remaining_springs, unmatched):
+    # Assume that so far the prefix has matched.  Which pieces can further match the prefix?
+    breakpoint()
+
+    if len(remaining_springs) == 0:
+        return []
+
+    maybe_springs = remaining_springs[0]
+    # Maybe springs is a combination of # and ?.  What numbers can this form?
+
+    ways = []
+
+    which_springs = Counter(maybe_springs) 
+    undamaged_springs = which_springs["1"]
+    firstk = unmatched[0]
+
+    thresh = 0
+    takek = 0
+    for k in unmatched:
+        if thresh > len(maybe_springs):
+            break
+        thresh += int(k)
+        takek += 1
+
+    pass_prefix = tuple(unmatched[:takek])
+    assert sum(pass_prefix) >= len(maybe_springs)
+    assert sum(pass_prefix[:-1]) < len(maybe_springs)
+    breakpoint()
+
+
+    for prefix in multin(maybe_springs, pass_prefix):
+        # If this can be a legit prefix, look at the other possible options
+        if prefix == unmatched[:len(prefix)]:
+
+            # What should we peel off? Given a group of maybe damaged spring '#?#?' and a prefix [k1, k2, k3, ],
+            # There can be at most len(maybe_springs) springs in there, so we at most consume from the prefix [k1, ..., kn]
+            # so that sum (k1, ... kn-1) < len(maybe_springs) and sum(k1 ... kn) >= len(maybe_springs)  
+            #
+            # Likewise we'll consume at most a block such that sum(1 in maybe_springs) >= k1
+            ways.append(delve(remaining_springs[1:], unmatched[len(prefix):]))
+
+    return sum(ways)
+
+
+
+
+
+    print(line, options, len(options))
+    grandcounts.append(len(options))
 
 def day12(filename):
     print()
@@ -30,65 +115,27 @@ def day12(filename):
 
     grandcounts = []
     replacings = []
+    diffs = []
     with open(filename) as puzzlein:
         for line in puzzlein:
             line = line.strip()
-            breakpoint()
             springs, counts = line.split()
-            springs = "?".join(5 * [springs])
+            springs = "?".join(5 * [springs]).replace("#", "1")
             counts = ",".join(5 * [counts])
             counts = counts.split(",")
             kounts = list(map(int, counts))
-
             expanded = "0".join("1" * int(leng) for leng in counts) 
 
-            #if "." in springs:
-            #    knowns = [piece for piece in springs.split(".") if piece != '']
-            #else:
-            #    knowns = springs
-
-
-            replaced = "0".join(piece for piece in springs.replace("#", '1').split(".") if piece != "")
-            # Regexify
-            replaced = replaced.replace("?", "(0|1){0,1}")
-
-
-            simpler = "^" + line.replace("?", "(_|-){0,1}") + "$"
-
-
-            preugh = "0".join(piece for piece in springs.replace("#", '1').split(".") if piece != "")
-
-
-            nuu = Counter(preugh)
             tot = Counter(expanded)
-            missing = tot['1'] - nuu['1']
-            
+
+            if "." in springs:
+                knowns = [piece for piece in springs.split(".") if piece != '']
+            else:
+                knowns = springs
+
+            grandcounts.append(delve(knowns, list(map(int, counts))))
 
 
-            options = []
-            # would it be faster per peice? eh
-            for ix in range(2**sum(c not in '01' for c in preugh)):
-                # We need exactly two bits set, can skip the rest of the number.
-                # Should this just be combinations of powers of 2?
-                # Could pick all combinations of size k amon what?
-                possible_replacement = bin(ix + 2**40)[-nuu['?']:]
-                if Counter(possible_replacement)['1'] != missing:
-                    continue
-
-                ugh = preugh
-                it = iter(possible_replacement)
-                while "?" in ugh:
-                    ugh = ugh.replace("?", next(it), 1)
-
-                #print(ugh)
-                subcounts = [str(sum(1 for _ in group)) for label, group in itertools.groupby(ugh) if label == '1']
-
-                if subcounts == counts:
-                    options.append(ugh)
-
-
-            print(line, options, len(options))
-            grandcounts.append(len(options))
 
 
     part1 = sum(grandcounts)
