@@ -36,12 +36,15 @@ def multin(num, prefix):
             ugh = ugh.replace("?", next(it), 1)
 
         #print(ugh)
-        subcounts = [str(sum(1 for _ in group)) for label, group in itertools.groupby(ugh) if label == '1']
+        subcounts = [sum(1 for _ in group) for label, group in itertools.groupby(ugh) if label == '1']
         
-        if subcounts == prefix[:len(subcounts]):
+        if subcounts == prefix[:len(subcounts)]:
             options.append(subcounts)
+        else:
+            breakpoint()
+            print("Not", subcounts)
     
-    return subcounts
+    return options
 
     # What about a minimum? That depends on the placement no?
 
@@ -71,6 +74,9 @@ def delve(remaining_springs, unmatched):
             break
         thresh += int(k)
         takek += 1
+
+    # This might end up with too long a prefix,
+    # say with "???" [1, 1, 3]
 
     pass_prefix = tuple(unmatched[:takek])
     assert sum(pass_prefix) >= len(maybe_springs)
