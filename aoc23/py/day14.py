@@ -9,6 +9,8 @@ import numpy as np
 import networkx as nx
 import itertools
 import math
+import functools
+import operator
 
 
 def day14(filename):
@@ -28,6 +30,11 @@ def day14(filename):
     orig = df.copy()
     
 
+    def roll_faster(df):
+        nextdf = df.copy()
+        for col in df.columns:
+            nextdf[col] = functools.reduce(operator.add, [list(sorted(group, reverse=True)) for key, group in itertools.groupby(df[col], lambda x: x == '#')])
+        return pd.DataFrame(nextdf)
 
     def roll(df, direction):
         prev = pd.DataFrame(data=np.zeros(df.shape))
@@ -67,31 +74,53 @@ def day14(filename):
     cache = {}
     cyclemap = defaultdict(list)
     nextdfkey = None
+    first = True
+    breakpoint()
     for cycle in range(1000000000):
         print("Cycle", cycle)
 
         if nextdfkey is not None:
             prevkey = nextdfkey
         else:
-            prevdf = nextdf.copy()
+            if first:
+                prevdf = df.copy()
+                first = False
+            else:
+                prevdf = nextdf.copy()
+
             prevkey = tuple(tuple(r) for r in prevdf.values)
 
         if prevkey not in cache:
-            print("...Rolling")
-            nextdf = roll(nextdf, [-1, 0])
+            #nextdf = roll(nextdf, [-1, 0])
+            nextdf = roll_faster(prevdf)
+            #old_north = roll(pd.DataFrame(prevdf), [-1, 0])
+            if False and not old_north.equals(nextdf):
+                breakpoint()
             #display_dfield(nextdf)
-            nextdf = roll(nextdf, [0, -1])
+            #nextdf = roll(nextdf, [0, -1])
+            rotated = pd.DataFrame(np.rot90(nextdf, k=3))
+            #old_west = roll(pd.DataFrame(nextdf), [0, -1])
+            nextdf = pd.DataFrame(np.rot90(roll_faster(rotated)))
+            if False and not old_west.equals(pd.DataFrame(nextdf)):
+                breakpoint()
             #display_dfield(nextdf)
-            nextdf = roll(nextdf, [1, 0])
+            #nextdf = roll(nextdf, [1, 0])
+            rotated = pd.DataFrame(np.rot90(nextdf, k=2))
+            #old_south = roll(pd.DataFrame(nextdf), [+1, 0])
+            nextdf = pd.DataFrame(np.rot90(roll_faster(rotated), k=2))
+            if False and not old_south.equals(pd.DataFrame(nextdf)):
+                breakpoint()
             #display_dfield(nextdf)
-            nextdf = roll(nextdf, [0, 1])
+            #nextdf = roll(nextdf, [0, 1])
+            rotated = pd.DataFrame(np.rot90(nextdf, k=1))
+            #old_east = roll(pd.DataFrame(nextdf), [0, 1])
+            nextdf = pd.DataFrame(np.rot90(roll_faster(rotated), k=3))
+            if False and not old_east.equals(pd.DataFrame(nextdf)):
+                breakpoint()
             #display_dfield(nextdf)
             #print(cycle, sum([(df.shape[0] - ix) * count for ix, count in enumerate((nextdf == 'O').sum(axis=1))]))
-            print("...Done rolling")
-            print("...adding to cache")
             cache[prevkey] = tuple(tuple(r) for r in nextdf.values)
             cyclemap[prevkey].append(cycle)
-            print("...added")
         else:
             cyclemap[prevkey].append(cycle)
             break
