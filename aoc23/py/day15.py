@@ -17,8 +17,7 @@ def HASH(s):
     for char in s:
         current += ord(char)
         current *= 17
-        current %= 256
-    return current
+    return current % 256
    # return functools.reduce(lambda x, y: (x + ord(y) * 17) % 256, list(s), 0)
 
 def day15(filename):
