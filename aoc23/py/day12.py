@@ -38,12 +38,16 @@ def multin(num, prefix):
         #print(ugh)
         subcounts = [sum(1 for _ in group) for label, group in itertools.groupby(ugh) if label == '1']
         
-        if subcounts == prefix[:len(subcounts)]:
+        if subcounts == []:
+            continue
+
+        if subcounts == list(prefix[:len(subcounts)]):
+            # Perhaps instead of passing multiple copies we can just counts?
             options.append(subcounts)
         else:
-            breakpoint()
-            print("Not", subcounts)
+            print("Not", subcounts, "for", prefix, num)
     
+    #breakpoint()
     return options
 
     # What about a minimum? That depends on the placement no?
@@ -53,15 +57,16 @@ def multin(num, prefix):
 
 def delve(remaining_springs, unmatched):
     # Assume that so far the prefix has matched.  Which pieces can further match the prefix?
-    breakpoint()
+    #breakpoint()
 
     if len(remaining_springs) == 0:
-        return []
+        return 0
 
     maybe_springs = remaining_springs[0]
     # Maybe springs is a combination of # and ?.  What numbers can this form?
 
     ways = []
+
 
     which_springs = Counter(maybe_springs) 
     undamaged_springs = which_springs["1"]
@@ -78,23 +83,43 @@ def delve(remaining_springs, unmatched):
     # This might end up with too long a prefix,
     # say with "???" [1, 1, 3]
 
+    # TODO: shortcut out of this in cases like
+    # '111????? [1, 3, 1, 1], that is never going to work
+
+
+    spring_prefix = 0
+    for ix, char in enumerate(maybe_springs):
+        if char != '1':
+            spring_prefix = ix + 1
+            if spring_prefix > unmatched[0]:
+                return 0
+            break
+
     pass_prefix = tuple(unmatched[:takek])
     assert sum(pass_prefix) >= len(maybe_springs)
-    assert sum(pass_prefix[:-1]) < len(maybe_springs)
-    breakpoint()
+
+    # When does this fail?
+    # assert sum(pass_prefix[:-1]) < len(maybe_springs)
+    #breakpoint()
 
 
     for prefix in multin(maybe_springs, pass_prefix):
         # If this can be a legit prefix, look at the other possible options
         if prefix == unmatched[:len(prefix)]:
+            rest = remaining_springs[1:]
+            if rest == []:
+                continue
 
             # What should we peel off? Given a group of maybe damaged spring '#?#?' and a prefix [k1, k2, k3, ],
             # There can be at most len(maybe_springs) springs in there, so we at most consume from the prefix [k1, ..., kn]
             # so that sum (k1, ... kn-1) < len(maybe_springs) and sum(k1 ... kn) >= len(maybe_springs)  
             #
             # Likewise we'll consume at most a block such that sum(1 in maybe_springs) >= k1
-            ways.append(delve(remaining_springs[1:], unmatched[len(prefix):]))
 
+            options = delve(remaining_springs[1:], unmatched[len(prefix):]))
+            ways.append(
+
+    print("Delve ended for", remaining_springs, unmatched, ways)
     return sum(ways)
 
 
