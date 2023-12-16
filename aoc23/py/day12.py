@@ -117,6 +117,8 @@ def delve(remaining_springs, unmatched):
             # Likewise we'll consume at most a block such that sum(1 in maybe_springs) >= k1
 
             options = delve(remaining_springs[1:], unmatched[len(prefix):]))
+            # TODO: we can't strip off the prefix', '???.111???' (1, 1, 3) would fail
+            # if ??? is matched with (1,), it needs to be (1, 1) for the rest to make sense.
             ways.append(
 
     print("Delve ended for", remaining_springs, unmatched, ways)

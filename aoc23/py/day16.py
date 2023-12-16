@@ -27,15 +27,16 @@ def day16(filename):
     df = pd.DataFrame(data)
 
 
-    heads = [(0, 0)]
+    heads = [(0, -1)]
     directions = [(0, 1)]
     seen = set()
 
     energized = pd.DataFrame(data=np.nan, index=df.index, columns=df.columns)
-    energized[heads[0][1]][heads[0][0]] = '#'
+
+    #energized[heads[0][1]][heads[0][0]] = '#'
 
     while True:
-        nexthd = list(zip(heads, directions))
+        nexthd = set(list(zip(heads, directions)))
         heads = []
         directions = []
 
@@ -43,10 +44,14 @@ def day16(filename):
         if nextseen.issubset(seen):
             break
 
+        notseen = nextseen - seen
+        if len(notseen) < len(nextseen):
+            #breakpoint()
+            pass
+
         seen |= nextseen 
-        for (h, d) in nexthd:
+        for (h, d) in notseen:
             advance = h[0] + d[0], h[1] + d[1]
-            seen.add((h, d))
             if advance[0] in df.index and advance[1] in df.columns:
                 row, col = advance
                 char = df[col][row]
