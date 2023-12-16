@@ -54,12 +54,21 @@ def multin(num, prefix):
 def score(springs):
     return [sum(1 for _ in group) for label, group in itertools.groupby(springs) if label == '1']
 
-def admit(springs, prefix):
+def admit(springs, prefix, left):
     subcounts = score(springs)
     # 1.1.1? is ok to have [1, 1, 1] <= [1, 1, 3]
     #if subcounts == [1, 1, 1]:
         #    breakpoint()
 
+    # If we can't fill the missing it won't work
+
+    missing_ones = sum(prefix) - Counter(springs)['1'] - Counter(left)['1']
+    places_for_ones = Counter(left)['?']
+
+    # sum(counts) - sum(1s_so_far) = to_place <= len(? left)
+    if missing_ones > places_for_ones:
+        return 0
+    
     subprefix = prefix[:len(subcounts)]
     if subcounts == subprefix:
         return 1
@@ -76,9 +85,21 @@ def progress(springs, counts):
 
 
     print(aanelkaar, counts)
+    # TODO: instead of string concat this could be bitfields of some kind
+    # Need to take care with encoding it as an integer because trailing zeros matter
+    # Could store with an extra 1 or if we know the index exactly then it does not matter at all
+#
+
+    wehave = Counter(aanelkaar)
+    total_unknown = wehave['?']
+    to_fill = sum(counts) - wehave['1']
+    left = aanelkaar
 
     for ix, char in enumerate(aanelkaar):
+        print(springs, ix, len(aanelkaar))
         nextstates = set()
+        #if states ==  {'00001', '10101', '00101'}:
+        #    breakpoint()
         for state in states:
             batch = set()
             if char == "1": 
@@ -86,16 +107,19 @@ def progress(springs, counts):
             elif char == "0":
                 batch.add(state + "0")
             elif char == "?":
+                total_unknown -= 1
                 batch.add(state + "1")
                 batch.add(state + "0")
 
-            nextstates |= {s for s in batch if admit(s, counts)}
+            nextstates |= {st for st in batch if admit(st, counts, left)}
 
-        #print(ix, char, states, "->", nextstates)
+        left = left[1:]
+        #print(ix, char, states, "->", [(score(n), n) for n in nextstates])
+        #breakpoint()
         states = nextstates
 
     trim_states = {n for n in nextstates if score(n) == counts}
-    #print(springs, len(nextstates), len(trim_states))
+    print(springs, len(nextstates), len(trim_states))
     #print(aanelkaar, counts)
     #breakpoint()
     return len(trim_states)
@@ -139,6 +163,7 @@ def day12(filename):
             grandcounts.append(progress(knowns, kounts))
 
     part1 = sum(grandcounts)
+    print(grandcounts)
     print("part1:", part1)
     print("part2:", part2)
     breakpoint()
