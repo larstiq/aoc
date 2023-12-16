@@ -50,86 +50,56 @@ def multin(num, prefix):
     #breakpoint()
     return options
 
-    # What about a minimum? That depends on the placement no?
 
-    # So now we're looking for decompositions 
+def score(springs):
+    return [sum(1 for _ in group) for label, group in itertools.groupby(springs) if label == '1']
 
+def admit(springs, prefix):
+    subcounts = score(springs)
+    # 1.1.1? is ok to have [1, 1, 1] <= [1, 1, 3]
+    #if subcounts == [1, 1, 1]:
+        #    breakpoint()
 
-def delve(remaining_springs, unmatched):
-    # Assume that so far the prefix has matched.  Which pieces can further match the prefix?
-    #breakpoint()
-
-    if len(remaining_springs) == 0:
+    subprefix = prefix[:len(subcounts)]
+    if subcounts == subprefix:
+        return 1
+    elif subcounts[:-1] == subprefix[:-1] and subcounts[-1] < subprefix[-1]:
+        return 1
+    else:
         return 0
 
-    maybe_springs = remaining_springs[0]
-    # Maybe springs is a combination of # and ?.  What numbers can this form?
+def progress(springs, counts):
 
-    ways = []
+    states = {""}
 
-
-    which_springs = Counter(maybe_springs) 
-    undamaged_springs = which_springs["1"]
-    firstk = unmatched[0]
-
-    thresh = 0
-    takek = 0
-    for k in unmatched:
-        if thresh > len(maybe_springs):
-            break
-        thresh += int(k)
-        takek += 1
-
-    # This might end up with too long a prefix,
-    # say with "???" [1, 1, 3]
-
-    # TODO: shortcut out of this in cases like
-    # '111????? [1, 3, 1, 1], that is never going to work
+    aanelkaar = "0".join(springs)
 
 
-    spring_prefix = 0
-    for ix, char in enumerate(maybe_springs):
-        if char != '1':
-            spring_prefix = ix + 1
-            if spring_prefix > unmatched[0]:
-                return 0
-            break
+    print(aanelkaar, counts)
 
-    pass_prefix = tuple(unmatched[:takek])
-    assert sum(pass_prefix) >= len(maybe_springs)
+    for ix, char in enumerate(aanelkaar):
+        nextstates = set()
+        for state in states:
+            batch = set()
+            if char == "1": 
+                batch.add(state + "1")
+            elif char == "0":
+                batch.add(state + "0")
+            elif char == "?":
+                batch.add(state + "1")
+                batch.add(state + "0")
 
-    # When does this fail?
-    # assert sum(pass_prefix[:-1]) < len(maybe_springs)
+            nextstates |= {s for s in batch if admit(s, counts)}
+
+        #print(ix, char, states, "->", nextstates)
+        states = nextstates
+
+    trim_states = {n for n in nextstates if score(n) == counts}
+    #print(springs, len(nextstates), len(trim_states))
+    #print(aanelkaar, counts)
     #breakpoint()
+    return len(trim_states)
 
-
-    for prefix in multin(maybe_springs, pass_prefix):
-        # If this can be a legit prefix, look at the other possible options
-        if prefix == unmatched[:len(prefix)]:
-            rest = remaining_springs[1:]
-            if rest == []:
-                continue
-
-            # What should we peel off? Given a group of maybe damaged spring '#?#?' and a prefix [k1, k2, k3, ],
-            # There can be at most len(maybe_springs) springs in there, so we at most consume from the prefix [k1, ..., kn]
-            # so that sum (k1, ... kn-1) < len(maybe_springs) and sum(k1 ... kn) >= len(maybe_springs)  
-            #
-            # Likewise we'll consume at most a block such that sum(1 in maybe_springs) >= k1
-
-            options = delve(remaining_springs[1:], unmatched[len(prefix):]))
-            # TODO: we can't strip off the prefix', '???.111???' (1, 1, 3) would fail
-            # if ??? is matched with (1,), it needs to be (1, 1) for the rest to make sense.
-            ways.append(
-
-    print("Delve ended for", remaining_springs, unmatched, ways)
-    return sum(ways)
-
-
-
-
-
-    print(line, options, len(options))
-    grandcounts.append(len(options))
 
 def day12(filename):
     print()
@@ -164,12 +134,9 @@ def day12(filename):
             if "." in springs:
                 knowns = [piece for piece in springs.split(".") if piece != '']
             else:
-                knowns = springs
+                knowns = [springs]
 
-            grandcounts.append(delve(knowns, list(map(int, counts))))
-
-
-
+            grandcounts.append(progress(knowns, kounts))
 
     part1 = sum(grandcounts)
     print("part1:", part1)
