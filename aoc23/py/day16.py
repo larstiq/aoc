@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from collections import Counter, defaultdict, deque
-from utils import examples, inputs, display_dfield
+from utils import examples, inputs, display_field
 
 import pandas as pd
 import scipy
@@ -25,15 +25,15 @@ def day16(filename):
             data.append(list(line.strip()))
 
     df = pd.DataFrame(data)
-
+    # Rows grow down, orient with complex plane
+    field = np.array([row for row in reversed(data)])
 
     def energize(heads, directions):
 
         seen = set()
+        energized = np.zeros_like(field, dtype=str)
 
-        energized = pd.DataFrame(data=0, index=df.index, columns=df.columns)
-
-        #energized[heads[0][1]][heads[0][0]] = '#'
+        UP, DOWN, LEFT, RIGHT = 1j, -1j, -1, 1
 
         while True:
             nexthd = set(list(zip(heads, directions)))
@@ -49,85 +49,84 @@ def day16(filename):
                 #breakpoint()
                 pass
 
+            display_field(field)
+            display_field(energized)
+            
             seen |= nextseen 
+            #breakpoint()
             for (h, d) in notseen:
-                advance = h[0] + d[0], h[1] + d[1]
-                if advance[0] in df.index and advance[1] in df.columns:
-                    row, col = advance
-                    char = df[col][row]
-                    energized[col][row] = 1
+                advance = h[0] + int(d.real), h[1] + int(d.imag)
+                print(f"From {h} by {d} gets to {advance}")
+                #breakpoint()
+                if 0 <= advance[0] < field.shape[1] and 0 <= advance[1] < field.shape[0]:
+                    x, y = advance
+                    char = field[x, y]
+                    energized[x, y] = '#'
 
                     if char == '.':
                         heads.append(advance)
                         directions.append(d)
-                    elif char == '|':
-                        if d in ((0, -1), (0, 1)):
-                            heads.append(advance)
-                            heads.append(advance)
-                            directions.extend([(1, 0), (-1, 0)])
-                        else:
+                    elif char == '|': # up/left continue, left/right split
+                        if d.real == 0:
                             heads.append(advance)
                             directions.append(d)
-                    elif char == '-':
-                        if d in ((-1, 0), (1, 0)):
+                        else:
                             heads.append(advance)
                             heads.append(advance)
-                            directions.extend([(0, -1), (0, 1)])
+                            directions.extend([-1j, 1j])
+                    elif char == '-':  # up/left split, left/right continue
+                        if d.real == 0:
+                            heads.append(advance)
+                            heads.append(advance)
+                            directions.extend([-1, -1])
                         else:
                             heads.append(advance)
                             directions.append(d)
                     elif char == '/':
-                        if d == (-1, 0):
-                            heads.append(advance)
-                            directions.append((0, 1))
-                        elif d == (1, 0):
-                            heads.append(advance)
-                            directions.append((0, -1))
-                        elif d == (0, -1):
-                            heads.append(advance)
-                            directions.append((1, 0))
-                        elif d == (0, 1):
-                            heads.append(advance)
-                            directions.append((-1, 0))
+                        heads.append(advance)
+                        if d.real == 0:
+                            directions.append(d*-1j)
+                        else:
+                            directions.append(d*1j)
                     elif char == '\\':
-                        if d == (-1, 0):
-                            heads.append(advance)
-                            directions.append((0, -1))
-                        elif d == (1, 0):
-                            heads.append(advance)
-                            directions.append((0, 1))
-                        elif d == (0, -1):
-                            heads.append(advance)
-                            directions.append((-1, 0))
-                        elif d == (0, 1):
-                            heads.append(advance)
-                            directions.append((1, 0))
+                        heads.append(advance)
+                        if d.real == 0:
+                            directions.append(d*1j)
+                        else:
+                            directions.append(d*-1j)
 
         return energized, (energized == 1).sum().sum()
 
 
     energize_counts = []
 
-    for pos in df.index:
-        print("Rows", pos)
+    for pos in range(field.shape[0]):
+        print("Horizontal", pos)
+        print("...from the left")
         heads = [(-1, pos)]
-        directions = [(1, 0)]
+        directions = [1]
+        energize_counts.append(energize(heads, directions)[1])
+        if heads[0] == (-1, 0):
+            part1 = energize_counts[-1]
+
+        breakpoint()
+
+        print("...from the right")
+        heads = [(field.shape[0], pos)]
+        directions = [-1]
         energize_counts.append(energize(heads, directions)[1])
 
-        heads = [(df.shape[0], pos)]
-        directions = [(-1, 0)]
-        energize_counts.append(energize(heads, directions)[1])
-
-    for pos in df.columns:
-        print("Columns", pos)
+    for pos in range(field.shape[1]):
+        print("Vertical", pos)
+        print("...from below", pos)
         heads = [(pos, -1)]
-        directions = [(0, 1)]
+        directions = [1j]
         energize_counts.append(energize(heads, directions)[1])
 
-        heads = [(pos, df.shape[1])]
-        directions = [(0, -1)]
+        print("...from above", pos)
+        heads = [(pos, field.shape[1])]
+        directions = [-1j]
         energize_counts.append(energize(heads, directions)[1])
-
 
     part2 = max(energize_counts)
     print("part1:", part1)
