@@ -27,85 +27,109 @@ def day16(filename):
     df = pd.DataFrame(data)
 
 
-    heads = [(0, -1)]
-    directions = [(0, 1)]
-    seen = set()
+    def energize(heads, directions):
 
-    energized = pd.DataFrame(data=np.nan, index=df.index, columns=df.columns)
+        seen = set()
 
-    #energized[heads[0][1]][heads[0][0]] = '#'
+        energized = pd.DataFrame(data=0, index=df.index, columns=df.columns)
 
-    while True:
-        nexthd = set(list(zip(heads, directions)))
-        heads = []
-        directions = []
+        #energized[heads[0][1]][heads[0][0]] = '#'
 
-        nextseen = set(nexthd)
-        if nextseen.issubset(seen):
-            break
+        while True:
+            nexthd = set(list(zip(heads, directions)))
+            heads = []
+            directions = []
 
-        notseen = nextseen - seen
-        if len(notseen) < len(nextseen):
-            #breakpoint()
-            pass
+            nextseen = set(nexthd)
+            if nextseen.issubset(seen):
+                break
 
-        seen |= nextseen 
-        for (h, d) in notseen:
-            advance = h[0] + d[0], h[1] + d[1]
-            if advance[0] in df.index and advance[1] in df.columns:
-                row, col = advance
-                char = df[col][row]
-                energized[col][row] = '#'
+            notseen = nextseen - seen
+            if len(notseen) < len(nextseen):
+                #breakpoint()
+                pass
 
-                if char == '.':
-                    heads.append(advance)
-                    directions.append(d)
-                elif char == '|':
-                    if d in ((0, -1), (0, 1)):
-                        heads.append(advance)
-                        heads.append(advance)
-                        directions.extend([(1, 0), (-1, 0)])
-                    else:
+            seen |= nextseen 
+            for (h, d) in notseen:
+                advance = h[0] + d[0], h[1] + d[1]
+                if advance[0] in df.index and advance[1] in df.columns:
+                    row, col = advance
+                    char = df[col][row]
+                    energized[col][row] = 1
+
+                    if char == '.':
                         heads.append(advance)
                         directions.append(d)
-                elif char == '-':
-                    if d in ((-1, 0), (1, 0)):
-                        heads.append(advance)
-                        heads.append(advance)
-                        directions.extend([(0, -1), (0, 1)])
-                    else:
-                        heads.append(advance)
-                        directions.append(d)
-                elif char == '/':
-                    if d == (-1, 0):
-                        heads.append(advance)
-                        directions.append((0, 1))
-                    elif d == (1, 0):
-                        heads.append(advance)
-                        directions.append((0, -1))
-                    elif d == (0, -1):
-                        heads.append(advance)
-                        directions.append((1, 0))
-                    elif d == (0, 1):
-                        heads.append(advance)
-                        directions.append((-1, 0))
-                elif char == '\\':
-                    if d == (-1, 0):
-                        heads.append(advance)
-                        directions.append((0, -1))
-                    elif d == (1, 0):
-                        heads.append(advance)
-                        directions.append((0, 1))
-                    elif d == (0, -1):
-                        heads.append(advance)
-                        directions.append((-1, 0))
-                    elif d == (0, 1):
-                        heads.append(advance)
-                        directions.append((1, 0))
+                    elif char == '|':
+                        if d in ((0, -1), (0, 1)):
+                            heads.append(advance)
+                            heads.append(advance)
+                            directions.extend([(1, 0), (-1, 0)])
+                        else:
+                            heads.append(advance)
+                            directions.append(d)
+                    elif char == '-':
+                        if d in ((-1, 0), (1, 0)):
+                            heads.append(advance)
+                            heads.append(advance)
+                            directions.extend([(0, -1), (0, 1)])
+                        else:
+                            heads.append(advance)
+                            directions.append(d)
+                    elif char == '/':
+                        if d == (-1, 0):
+                            heads.append(advance)
+                            directions.append((0, 1))
+                        elif d == (1, 0):
+                            heads.append(advance)
+                            directions.append((0, -1))
+                        elif d == (0, -1):
+                            heads.append(advance)
+                            directions.append((1, 0))
+                        elif d == (0, 1):
+                            heads.append(advance)
+                            directions.append((-1, 0))
+                    elif char == '\\':
+                        if d == (-1, 0):
+                            heads.append(advance)
+                            directions.append((0, -1))
+                        elif d == (1, 0):
+                            heads.append(advance)
+                            directions.append((0, 1))
+                        elif d == (0, -1):
+                            heads.append(advance)
+                            directions.append((-1, 0))
+                        elif d == (0, 1):
+                            heads.append(advance)
+                            directions.append((1, 0))
+
+        return energized, (energized == 1).sum().sum()
 
 
-    print(energized)
-    part1 =  (energized == '#').sum().sum()
+    energize_counts = []
+
+    for pos in df.index:
+        print("Rows", pos)
+        heads = [(-1, pos)]
+        directions = [(1, 0)]
+        energize_counts.append(energize(heads, directions)[1])
+
+        heads = [(df.shape[0], pos)]
+        directions = [(-1, 0)]
+        energize_counts.append(energize(heads, directions)[1])
+
+    for pos in df.columns:
+        print("Columns", pos)
+        heads = [(pos, -1)]
+        directions = [(0, 1)]
+        energize_counts.append(energize(heads, directions)[1])
+
+        heads = [(pos, df.shape[1])]
+        directions = [(0, -1)]
+        energize_counts.append(energize(heads, directions)[1])
+
+
+    part2 = max(energize_counts)
     print("part1:", part1)
     print("part2:", part2)
     breakpoint()
