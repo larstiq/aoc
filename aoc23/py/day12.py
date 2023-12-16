@@ -1,17 +1,9 @@
 #!/usr/bin/env python
 
-from collections import Counter, defaultdict, deque
+from collections import Counter
 from utils import examples, inputs
 
-import pandas as pd
-import scipy
-import numpy as np
-import networkx as nx
-import itertools
-import math
-import re
-import exrex
-import functools
+import time
 
 
 def prefix_admissable(prefix, full):
@@ -41,8 +33,15 @@ def progress(springs, counts):
     states = Counter()
     states[((), ".")] = 1
 
-    for ix, char in enumerate(reduced):
+    # TODO: split on blocks of contiguous characters:
+    #  .....  keeps the state the same
+    #  #####  maps prefix (..., N)  to (..., N + count of 3)
+    #  ?????  use integer partitions with stars and bars to give the counts of
+    #         (n, k) tuples that arise to permissible prefixes
+    index = 0
+    while index < len(reduced):
         nextstates = Counter()
+        char = reduced[index]
 
         for state, count in states.items():
             prefix, lastchar = state
@@ -79,6 +78,7 @@ def progress(springs, counts):
                     nextstates[(nextprefix, lc)] += ncount
 
         states = nextstates
+        index += 1
 
     return sum(count for ((prefix, lastchar), count) in states.items() if prefix == counts)
 
@@ -86,6 +86,7 @@ def progress(springs, counts):
 def day12(filename):
     print()
     print(filename)
+    start = time.time()
 
     part1 = 0
     part2 = 0
@@ -99,10 +100,14 @@ def day12(filename):
 
             part1 += progress(springs, counts)
             part2 += progress("?".join(5 * [springs]), counts * 5)
-            #print(line, progress("?".join(5 * [springs]), counts * 5))
 
+    print("time:", time.time() - start)
     print("part1:", part1)
     print("part2:", part2)
+
+    if str(filename).endswith("inputs/12"):
+        assert part1 == 7939
+        assert part2 == 850504257483930
 
 
 day12(examples("12"))
