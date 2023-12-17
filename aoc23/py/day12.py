@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 from collections import Counter
+from itertools import groupby
+from time import time
+
 from utils import examples, inputs
 
-import time
 
 
 def prefix_admissable(prefix, full):
@@ -17,11 +19,7 @@ def prefix_admissable(prefix, full):
         return 0
 
 
-def progress(springs, counts):
-    # We can collapse strings of ... to . as they won't contribute
-    # to contiguous ones
-    reduced = ".".join(s for s in springs.split(".") if s != '')
-
+def error_correct(springs, counts):
     # States ending in . can not increase their prefix anymore and we can simply count how many there are per prefix.
     # States ending in #  may branch and there is a difference between
     #
@@ -38,22 +36,20 @@ def progress(springs, counts):
     #  #####  maps prefix (..., N)  to (..., N + count of 3)
     #  ?????  use integer partitions with stars and bars to give the counts of
     #         (n, k) tuples that arise to permissible prefixes
-    index = 0
-    while index < len(reduced):
+    for (char, group) in groupby(springs):
         nextstates = Counter()
-        char = reduced[index]
 
         for state, count in states.items():
             prefix, lastchar = state
             if prefix == ():
-                prefixplus = prefixand = (1,)
+                prefixplus = prefixand = (len(group),)
             else:
-                prefixplus = prefix[:-1] + (prefix[-1] + 1,)
-                prefixand = prefix + (1,)
+                prefixplus = prefix[:-1] + (prefix[-1] + len(group),)
+                prefixand = prefix + (len(group),)
 
             batch = Counter()
             match (lastchar, char):
-                case "#", "#": # We extend a contiguous string of #s with one more
+                case "#", "#": # We extend a contiguous string of #s
                     batch[(prefixplus, char)] += count
                 case ".", "#": # Another contiguous string starts
                     batch[(prefixand, char)] += count
@@ -86,7 +82,7 @@ def progress(springs, counts):
 def day12(filename):
     print()
     print(filename)
-    start = time.time()
+    start = time()
 
     part1 = 0
     part2 = 0
@@ -98,10 +94,10 @@ def day12(filename):
             springs, counts = line.split()
             counts = tuple(map(int, counts.split(",")))
 
-            part1 += progress(springs, counts)
-            part2 += progress("?".join(5 * [springs]), counts * 5)
+            part1 += error_correct(springs, counts)
+            part2 += error_correct("?".join(5 * [springs]), counts * 5)
 
-    print("time:", time.time() - start)
+    print("time:", time() - start)
     print("part1:", part1)
     print("part2:", part2)
 
