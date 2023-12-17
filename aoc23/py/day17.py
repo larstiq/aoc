@@ -34,6 +34,8 @@ def day17(filename):
             data.append(list(map(int, line.strip())))
 
     df = pd.DataFrame(data)
+
+    stringdf = pd.DataFrame([map(str, row) for row in data])
     start = (0, 0)
     stop = df.shape[0] - 1, df.shape[1] - 1
 
@@ -66,16 +68,17 @@ def day17(filename):
         state = heappop(heads)
         print(state)
         state_loss, pos, direction = state
-        if pos == stop:
-            break
         additional_loss = 0
-        for ix in range(1, 4):
+        for ix in range(1, 11):
             npos = pos[0] + ix*direction[0], pos[1] + ix*direction[1]
             if npos[0] not in df.index or npos[1] not in df.columns:
                 continue
 
             additional_loss += df[npos[1]][npos[0]]
             loss = state_loss + additional_loss
+
+            if ix < 4:
+                continue
 
             for turn in TURNS[direction]:
                 if (npos, turn) in states and states[npos, turn] <= loss:
@@ -97,21 +100,18 @@ def day17(filename):
                     path[npos[1]][npos[0]] = angle
 
         if DEBUG:
-            display_dfield(path)
+            display_dfield(path.combine_first(stringdf))
             endstates = {state for state in states if state[0] == stop }
             if len(endstates) > 0:
                 print(min(states[s] for s in endstates)) 
-
-            prevlosses = pd.DataFrame(data=np.nan, index=df.index, columns=df.columns)
-
-            for state in prevstates:
-                there = prevlosses[state[0][1]][state[0][0]] 
-                prevlosses[state[0][1]][state[0][0]] = np.nanmin([there, prevstates[state]])
 
             curlosses = pd.DataFrame(data=np.nan, index=df.index, columns=df.columns)
             for state in states:
                 there = curlosses[state[0][1]][state[0][0]]
                 curlosses[state[0][1]][state[0][0]] = np.nanmin([there, states[state]])
+
+            display_dfield(curlosses.combine_first(df))
+            breakpoint()
 
     endstates = {state for state in states if state[0] == stop }
     part1 = min(states[s] for s in endstates)
@@ -122,5 +122,6 @@ def day17(filename):
     breakpoint()
 
 
+day17(examples("17-2"))
 day17(examples("17"))
 day17(inputs("17"))
