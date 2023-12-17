@@ -3,9 +3,8 @@
 from collections import Counter
 from utils import examples, inputs, display_dfield
 
-import pandas as pd
-
 from heapq import heappush, heappop
+from time import time
 
 
 def day17(filename):
@@ -21,10 +20,9 @@ def day17(filename):
         for line in puzzlein:
             data.append(list(map(int, line.strip())))
 
-    df = pd.DataFrame(data)
+    start = time()
 
-    stringdf = pd.DataFrame([map(str, row) for row in data])
-    stop = df.shape[0] - 1, df.shape[1] - 1
+    stop = len(data) - 1, len(data[0]) - 1
 
     UP, DOWN, LEFT, RIGHT = (-1, 0), (1, 0), (0, -1), (0, 1)
     states = Counter()
@@ -63,10 +61,10 @@ def day17(filename):
             # Since we're casting into the same direction, if we're out of
             # bends after step N we'll be more out of bounds at step N+1,
             # terminate the entire ray early.
-            if x not in df.index or y not in df.columns:
+            if not (0 <= x <= stop[0] and 0 <= y <= stop[1]):
                 break
 
-            additional_loss += df[y][x]
+            additional_loss += data[x][y]
             loss = state_loss + additional_loss
 
             # Ultracrucible can not turn before step 4, but accumulated losses
@@ -89,6 +87,7 @@ def day17(filename):
 
     print("part1:", part1)
     print("part2:", part2)
+    print("time:", time() - start)
 
 
 day17(examples("17-2"))
