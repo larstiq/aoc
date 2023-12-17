@@ -32,10 +32,10 @@ def day17(filename):
     states = Counter()
     # More than needed but they will be pruned, so just eliminate
     # a chance of me getting the naming wrong
-    states[start, DOWN, 0] = 0
-    states[start, RIGHT, 0] =  0
-    states[start, UP, 0] = 0
-    states[start, LEFT, 0] =  0
+    states[start, DOWN] = 0
+    states[start, RIGHT] =  0
+    states[start, UP] = 0
+    states[start, LEFT] =  0
     heads = { h for h in states }
     path = pd.DataFrame(data=np.nan, index=df.index, columns=df.columns, dtype=object)
 
@@ -57,7 +57,7 @@ def day17(filename):
             # to think in the next step but just take the turns
             
             state_loss = states[state]
-            pos, direction, steps = state
+            pos, direction = state
 
             additional_loss = 0
             for ix in range(1, 4):
@@ -69,11 +69,11 @@ def day17(filename):
                 loss = state_loss + additional_loss
 
                 for turn in TURNS[direction]:
-                    touched.add((npos, turn, ix))
-                    if (npos, turn, ix) in states and states[npos, turn, ix] < loss:
+                    if (npos, turn) in states and states[npos, turn] < loss:
                         continue
 
-                    states[npos, turn, ix] = loss
+                    touched.add((npos, turn))
+                    states[npos, turn] = loss
 
                     if DEBUG:
                         if direction == RIGHT:
@@ -87,7 +87,8 @@ def day17(filename):
 
                         path[npos[1]][npos[0]] = angle
 
-        heads = { h for h in touched if states[h] >= prevstates[h]}
+        heads = { h for h in touched if states[h] <= prevstates[h]}
+        heads = touched
         if DEBUG:
             display_dfield(path)
             endstates = {state for state in states if state[0] == stop }
@@ -107,11 +108,13 @@ def day17(filename):
 
         if heads.issubset(prevheads):
             break
+
         print(len(heads))
 
     endstates = {state for state in states if state[0] == stop }
     part1 = min(states[s] for s in endstates)
 
+    print("Too high?", part1 >= 860)
     print("part1:", part1)
     print("part2:", part2)
     breakpoint()
