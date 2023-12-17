@@ -42,14 +42,19 @@ def day17(filename):
     DEBUG = False
 
     while len(heads) > 0:
-        # Avoid tracking amount of steps by adding all possible reached squares
-        # after we turn
         
         state = heappop(heads)
         state_loss, pos, direction = state
+        if pos == stop:
+            break
         additional_loss = 0
 
-        # Ultracrucible
+        # Avoid tracking amount of steps by adding all possible reached squares
+        # after we turn.
+        #
+        # Ultracrucible can take at most 10 steps
+
+
         for ix in range(1, 11):
             npos = pos[0] + ix*direction[0], pos[1] + ix*direction[1]
 
@@ -71,11 +76,15 @@ def day17(filename):
                 if (npos, turn) in states and states[npos, turn] <= loss:
                     continue
 
+                # Since we're iterating in sorted order, we don't need to check
+                # if this improves, we're guaranteed to see this first
+                # Do need to stop though
+
                 heappush(heads, (loss, npos, turn))
                 states[npos, turn] = loss
 
-    endstates = {state for state in states if state[0] == stop }
-    part1 = min(states[s] for s in endstates)
+
+    part1 = state_loss
 
     print("part1:", part1)
     print("part2:", part2)
