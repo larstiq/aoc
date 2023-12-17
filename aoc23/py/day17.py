@@ -20,16 +20,8 @@ def day17(filename):
         for line in puzzlein:
             data.append(list(map(int, line.strip())))
 
-    start = time()
-
     stop = len(data) - 1, len(data[0]) - 1
-
     UP, DOWN, LEFT, RIGHT = (-1, 0), (1, 0), (0, -1), (0, 1)
-    states = Counter()
-    states[0, 0, DOWN] = 0
-    states[0, 0, RIGHT] = 0
-
-    heads = [(loss,) + state for (state, loss) in states.items()]
 
     TURNS = {
         UP: [LEFT, RIGHT],
@@ -40,54 +32,60 @@ def day17(filename):
             UP,
         ],
     }
-    DEBUG = False
 
-    while len(heads) > 0:
-        state = heappop(heads)
-        state_loss, px, py, direction = state
-        dx, dy = direction
-        additional_loss = 0
+    def drive_crucible(moverange):
+        start = time()
+        states = Counter()
+        states[0, 0, DOWN] = 0
+        states[0, 0, RIGHT] = 0
 
-        if (px, py) == stop:
-            break
+        heads = [(loss,) + state for (state, loss) in states.items()]
+        while len(heads) > 0:
+            state = heappop(heads)
+            state_loss, px, py, direction = state
+            dx, dy = direction
+            additional_loss = 0
 
-        # Avoid tracking amount of steps by adding all possible reached squares
-        # after we turn.
-        #
-        # Ultracrucible can take at most 10 steps
-        for step in range(1, 11):
-            x, y = px + step * dx, py + step * dy
-
-            # Since we're casting into the same direction, if we're out of
-            # bends after step N we'll be more out of bounds at step N+1,
-            # terminate the entire ray early.
-            if not (0 <= x <= stop[1] and 0 <= y <= stop[0]):
+            if (px, py) == stop:
                 break
 
-            additional_loss += data[y][x]
-            loss = state_loss + additional_loss
+            # Avoid tracking amount of steps by adding all possible reached squares
+            # after we turn.
+            #
+            # Ultracrucible can take at most 10 steps
+            for step in range(1, moverange.stop):
+                x, y = px + step * dx, py + step * dy
 
-            # Ultracrucible can not turn before step 4, but accumulated losses
-            # should be tracked
-            if step < 4:
-                continue
+                # Since we're casting into the same direction, if we're out of
+                # bends after step N we'll be more out of bounds at step N+1,
+                # terminate the entire ray early.
+                if not (0 <= x <= stop[1] and 0 <= y <= stop[0]):
+                    break
 
-            for turn in TURNS[direction]:
-                if (x, y, turn) in states and states[x, y, turn] <= loss:
+                additional_loss += data[y][x]
+                loss = state_loss + additional_loss
+
+                # Ultracrucible can not turn before step 4, but accumulated losses
+                # should be tracked
+                if step < moverange.start:
                     continue
 
-                # Since we're iterating in sorted order, we don't need to check
-                # if this improves, we're guaranteed to see this first
-                # Do need to stop though
+                for turn in TURNS[direction]:
+                    if (x, y, turn) in states and states[x, y, turn] <= loss:
+                        continue
 
-                heappush(heads, (loss, x, y, turn))
-                states[x, y, turn] = loss
+                    heappush(heads, (loss, x, y, turn))
+                    states[x, y, turn] = loss
 
-    part1 = state_loss
+        print("time:", time() - start)
+        return state_loss
+
+
+    part1 = drive_crucible(range(1, 4))
+    part2 = drive_crucible(range(4, 11))
 
     print("part1:", part1)
     print("part2:", part2)
-    print("time:", time() - start)
 
 
 day17(examples("17-2"))
