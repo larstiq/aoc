@@ -61,10 +61,10 @@ def day17(filename):
             # Since we're casting into the same direction, if we're out of
             # bends after step N we'll be more out of bounds at step N+1,
             # terminate the entire ray early.
-            if not (0 <= x <= stop[0] and 0 <= y <= stop[1]):
+            if not (0 <= x <= stop[1] and 0 <= y <= stop[0]):
                 break
 
-            additional_loss += data[x][y]
+            additional_loss += data[y][x]
             loss = state_loss + additional_loss
 
             # Ultracrucible can not turn before step 4, but accumulated losses
