@@ -10,6 +10,15 @@ import networkx as nx
 import itertools
 import math
 
+from heapq import heappush, heappop
+
+from dataclasses import dataclass, field
+from typing import Any
+
+@dataclass(order=True)
+class State:
+    loss: int
+
 
 def day17(filename):
     print()
@@ -29,14 +38,17 @@ def day17(filename):
     stop = df.shape[0] - 1, df.shape[1] - 1
 
     UP, DOWN, LEFT, RIGHT = (-1, 0), (1, 0), (0, -1), (0, 1)
-    states = Counter()
     # More than needed but they will be pruned, so just eliminate
     # a chance of me getting the naming wrong
+
+    states = Counter()
     states[start, DOWN] = 0
-    states[start, RIGHT] =  0
+    states[start, RIGHT] = 0
     states[start, UP] = 0
-    states[start, LEFT] =  0
-    heads = { h for h in states }
+    states[start, LEFT] = 0
+
+    heads = [(loss, state[0], state[1]) for (state, loss) in states.items()]
+
     path = pd.DataFrame(data=np.nan, index=df.index, columns=df.columns, dtype=object)
 
     TURNS = {
@@ -46,49 +58,44 @@ def day17(filename):
             RIGHT: [DOWN, UP,]
             }
     DEBUG = False
+
     while len(heads) > 0:
-        prevstates = states.copy()
-        prevheads = heads.copy()
-        #print("Heads:", heads)
+        # We can take at most 3 steps, let's add them all so we don't need
+        # to think in the next step but just take the turns
+        
+        state = heappop(heads)
+        print(state)
+        state_loss, pos, direction = state
+        if pos == stop:
+            break
+        additional_loss = 0
+        for ix in range(1, 4):
+            npos = pos[0] + ix*direction[0], pos[1] + ix*direction[1]
+            if npos[0] not in df.index or npos[1] not in df.columns:
+                continue
 
-        touched = set()
-        for state in heads:
-            # We can take at most 3 steps, let's add them all so we don't need
-            # to think in the next step but just take the turns
-            
-            state_loss = states[state]
-            pos, direction = state
+            additional_loss += df[npos[1]][npos[0]]
+            loss = state_loss + additional_loss
 
-            additional_loss = 0
-            for ix in range(1, 4):
-                npos = pos[0] + ix*direction[0], pos[1] + ix*direction[1]
-                if npos[0] not in df.index or npos[1] not in df.columns:
+            for turn in TURNS[direction]:
+                if (npos, turn) in states and states[npos, turn] <= loss:
                     continue
 
-                additional_loss += df[npos[1]][npos[0]]
-                loss = state_loss + additional_loss
+                heappush(heads, (loss, npos, turn))
+                states[npos, turn] = loss
 
-                for turn in TURNS[direction]:
-                    if (npos, turn) in states and states[npos, turn] < loss:
-                        continue
+                if DEBUG:
+                    if direction == RIGHT:
+                        angle = '>'
+                    elif direction == UP:
+                        angle = '^'
+                    elif direction == LEFT:
+                        angle = '<'
+                    elif direction == DOWN:
+                        angle = 'v'
 
-                    touched.add((npos, turn))
-                    states[npos, turn] = loss
+                    path[npos[1]][npos[0]] = angle
 
-                    if DEBUG:
-                        if direction == RIGHT:
-                            angle = '>'
-                        elif direction == UP:
-                            angle = '^'
-                        elif direction == LEFT:
-                            angle = '<'
-                        elif direction == DOWN:
-                            angle = 'v'
-
-                        path[npos[1]][npos[0]] = angle
-
-        heads = { h for h in touched if states[h] <= prevstates[h]}
-        heads = touched
         if DEBUG:
             display_dfield(path)
             endstates = {state for state in states if state[0] == stop }
@@ -105,11 +112,6 @@ def day17(filename):
             for state in states:
                 there = curlosses[state[0][1]][state[0][0]]
                 curlosses[state[0][1]][state[0][0]] = np.nanmin([there, states[state]])
-
-        if heads.issubset(prevheads):
-            break
-
-        print(len(heads))
 
     endstates = {state for state in states if state[0] == stop }
     part1 = min(states[s] for s in endstates)
