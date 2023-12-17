@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from collections import Counter, defaultdict, deque
-from utils import examples, inputs
+from utils import examples, inputs, display_dfield
 
 import pandas as pd
 import scipy
@@ -26,59 +26,67 @@ def day17(filename):
 
     df = pd.DataFrame(data)
     start = (0, 0)
+    stop = df.shape[0] - 1, df.shape[1] - 1
 
     UP, DOWN, LEFT, RIGHT = (-1, 0), (1, 0), (0, -1), (0, 1)
     states = Counter()
     states[start, DOWN, 0] = 0
     states[start, RIGHT, 0] =  0
     heads = { h for h in states }
+    path = pd.DataFrame(data=np.nan, index=df.index, columns=df.columns, dtype=object)
 
-    minloss = None
+    TURNS = {
+            UP: [LEFT, RIGHT],
+            DOWN: [LEFT, RIGHT],
+            LEFT: [UP, DOWN],
+            RIGHT: [UP, DOWN,]
+            }
+    DEBUG = False
     while len(heads) > 0:
         prevstates = states.copy()
-        print("Heads:", heads)
+        #print("Heads:", heads)
+
+        touched = set()
         for state in heads:
             # We can take at most 3 steps, let's add them all so we don't need
             # to think in the next step but just take the turns
-            batch = Counter()
             
             state_loss = states[state]
             pos, direction, steps = state
 
-            loss = 0
+            additional_loss = 0
             for ix in range(1, 4):
                 npos = pos[0] + ix*direction[0], pos[1] + ix*direction[1]
                 if npos[0] not in df.index or npos[1] not in df.columns:
                     continue
 
-                if ix != 0:
-                    loss += df[npos[1]][npos[0]]
-                    print(npos, loss)
-                if direction == UP:
-                    batch[npos, LEFT, ix] = state_loss + loss
-                    batch[npos, RIGHT, ix] = state_loss + loss
-                elif direction == DOWN:
-                    batch[npos, LEFT, ix] = state_loss + loss
-                    batch[npos, RIGHT, ix] = state_loss + loss
-                elif direction == LEFT:
-                    batch[npos, UP, ix] = state_loss + loss
-                    batch[npos, DOWN, ix] = state_loss + loss
-                elif direction == RIGHT:
-                    batch[npos, UP, ix] = state_loss + loss
-                    batch[npos, DOWN, ix] = state_loss + loss
+                additional_loss += df[npos[1]][npos[0]]
+                loss = state_loss + additional_loss
 
-            for ding in batch:
-                print("   ", ding, batch[ding])
-            for (nnpos, dire, steps), nloss in batch.items():
-                if (nnpos, dire, steps) in states:
-                    prevval = states[nnpos, dire, steps]
-                    states[nnpos, dire, steps] = min(prevval, nloss)
-                else:
-                    states[nnpos, dire, steps] = nloss
+                for turn in TURNS[direction]:
+                    if (npos, turn, ix) in states and states[npos, turn, ix] < loss:
+                        continue
 
-        heads = { h for h in states if states[h] > prevstates[h] }
+                    touched.add((npos, turn, ix))
+                    states[npos, turn, ix] = loss
 
-    endstates = {(poss, dird, steps) for  (poss, dird, steps) in states if poss == (df.shape[0] - 1, df.shape[1] - 1) }
+                    if DEBUG:
+                        if direction == RIGHT:
+                            angle = '>'
+                        elif direction == UP:
+                            angle = '^'
+                        elif direction == LEFT:
+                            angle = '<'
+                        elif direction == DOWN:
+                            angle = 'v'
+
+                        path[npos[1]][npos[0]] = angle
+
+        #display_dfield(path)
+        heads = { h for h in touched if states[h] >= prevstates[h]}
+        print(len(heads))
+
+    endstates = {state for state in states if state[0] == stop }
     part1 = min(states[s] for s in endstates)
 
     print("part1:", part1)
