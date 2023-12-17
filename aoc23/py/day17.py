@@ -46,7 +46,7 @@ def day17(filename):
             pos, direction, steps = state
 
             loss = 0
-            for ix in range(4):
+            for ix in range(1, 4):
                 npos = pos[0] + ix*direction[0], pos[1] + ix*direction[1]
                 if npos[0] not in df.index or npos[1] not in df.columns:
                     continue
@@ -54,8 +54,6 @@ def day17(filename):
                 if ix != 0:
                     loss += df[npos[1]][npos[0]]
                     print(npos, loss)
-                elif steps == 0:
-                    continue
                 if direction == UP:
                     batch[npos, LEFT, ix] = state_loss + loss
                     batch[npos, RIGHT, ix] = state_loss + loss
@@ -73,7 +71,8 @@ def day17(filename):
                 print("   ", ding, batch[ding])
             for (nnpos, dire, steps), nloss in batch.items():
                 if (nnpos, dire, steps) in states:
-                    states[nnpos, dire, steps] = min(states[nnpos, dire, steps], nloss)
+                    prevval = states[nnpos, dire, steps]
+                    states[nnpos, dire, steps] = min(prevval, nloss)
                 else:
                     states[nnpos, dire, steps] = nloss
 
