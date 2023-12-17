@@ -19,6 +19,62 @@ def prefix_admissable(prefix, full):
         return 0
 
 
+# This should also be doable with plain math
+@functools.cache
+def options_questions(damage_length):
+    # Given `damage_length` damaged spring records how many strings of # and . can we fit?
+    #
+    # The Bell numbers count the number of set partitions, but we only allow contiguous groupings.
+    #
+    # But using the stars and bars argument we can divide N damaged records into k groups by placing
+    # the k bars in the N-1 gaps between stars. Since # and . alternate and
+    # there is at least one star between bars this gives e.g.
+    #
+    #
+    # ? ? ? | ? | ? ? | ? ? ?     N=9, k=3 either ###.##... or ...#..###.  Theare are (8 choose 3) total groupings into four groups.
+    #
+    # T
+
+    #
+    # The first spring could be . or 
+    #
+    # Returns a dictionary with {(n1, n2, ...nm), head, tail: count} that says there
+    # are `count` instances of contiguous (n1, n2, ..., nm) that start with
+    # `head` and end with `tail`.
+    result = Counter()
+
+    if damage_length == 2:
+        result[(), '.', '.''] = 1
+        result[(1,), '#'] = 1
+        return result
+
+    for (prefix, head, tail), count in damage_length(damage_length - 1):
+        # Branch starting with '.' carries on the prefix
+        result[(prefix, '.')] += count
+        match head, tail:
+            case '#':
+                if prefix == ():
+                    extended = (1,)
+                else:
+                    extended = (prefix[0] + 1,) + prefix[1:]
+                # Ours is #
+                result[(extended, '#')] += count
+                # or .
+            case '.':
+                concatted = prefix + (1,)
+                result[(concatted, '#')] += count
+    return result
+    
+
+def concat(prefix: tuple[int, ...], suffix: tuple[int, ...]):
+    return prefix + suffix
+    
+
+# We need to extend both left and right
+def extend(prefix: tuple[int, ...], suffix: tuple[int, ...]):
+    return prefix[:-1] + (prefix[-1] + suffix[0],) + suffix[1:]
+
+
 def error_correct(springs, counts):
     # States ending in . can not increase their prefix anymore and we can simply count how many there are per prefix.
     # States ending in #  may branch and there is a difference between
@@ -41,32 +97,40 @@ def error_correct(springs, counts):
 
         for state, count in states.items():
             prefix, lastchar = state
-            if prefix == ():
-                prefixplus = prefixand = (len(group),)
-            else:
-                prefixplus = prefix[:-1] + (prefix[-1] + len(group),)
-                prefixand = prefix + (len(group),)
+            suffix = (len(group),)
 
             batch = Counter()
             match (lastchar, char):
                 case "#", "#": # We extend a contiguous string of #s
-                    batch[(prefixplus, char)] += count
+                    batch[extend(prefix, suffix), char)] += count
                 case ".", "#": # Another contiguous string starts
-                    batch[(prefixand, char)] += count
+                    batch[(concat(prefix, suffix)), char)] += count
                 case _, ".": # we continue, prefix remains admissable
                     batch[(prefix, ".")] += count
                 case _, "?": # Damaged records split in two branches
                     # The branch adding a terminating . carries on the prefix
                     batch[(prefix, ".")] += count
 
-                    # The branch adding a # either
-                    match lastchar:
-                        case '#':
-                            # extends a contiguous string of #
-                            batch[(prefixplus, "#")] += count
-                        case '.':
-                            # or starts another
-                            batch[(prefixand, "#")] += count
+                    # For a block of damaged records iterate over the possible
+                    # damage suffixes
+                    for (duffix,  duffix_start), duffix_count in options_questions(len(group)):
+                        # The branch adding a # either
+                        match lastchar, duffix_start:
+                            case '#', '.':
+                                # Concat
+                                batch[concat(prefix, duffix), 
+                            case '#', '#':
+                                pass
+                            case '.', '.':
+                                pass
+                            case '.', '#':
+
+                            case '#':
+                                # extends a contiguous string of #
+                                batch[extend(prefixplus, "#")] += count
+                            case '.':
+                                # or starts another
+                                batch[(prefixand, "#")] += count
 
             # Prune illegal states.
             for (nextprefix, lc), ncount in batch.items():
