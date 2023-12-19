@@ -46,24 +46,14 @@ def day19(filename):
     components = "xmsa"
     boom = defaultdict(list)
     boom["in"].append({component: range(1, 4000 + 1) for component in components})
-    unhandled = set(workflows.keys())
-    handled = set()
     discovered = set(["in"])
 
     while discovered:
         # Disjoint union, slow check but soit
-        assert (handled | unhandled) == set(workflows.keys())
-        assert handled.intersection(unhandled) == set()
-
         node = discovered.pop()
-        handled.add(node)
-        unhandled -= {node}
 
         childer = boom[node]
-
-        outerblock = childer[0]
-        block = outerblock
-
+        block = childer[0]
         for instruction in workflows[node]:
             rule, target = instruction.split(":")
             assert rule[1] in ("<", ">")
@@ -81,24 +71,20 @@ def day19(filename):
             if target not in ("A", "R"):
                 discovered.add(target)
 
-            if comp == "<":
-                left = block | {component: range(block[component].start, thres)}
-                right = block | {component: range(thres, block[component].stop)}
+            compare_larger = 1 * (comp == ">")
+            left = block | {
+                component: range(block[component].start, thres + compare_larger)
+            }
+            righ = block | {
+                component: range(thres + compare_larger, block[component].stop)
+            }
 
-                boom[target].append(left)
-                block = right
-                if final is not None:
-                    boom[final].append(block)
+            boom[target].append(righ if compare_larger else left)
+            block = left if compare_larger else righ
+            if final is not None:
+                boom[final].append(block)
 
-            elif comp == ">":
-                left = block | {component: range(block[component].start, thres + 1)}
-                right = block | {component: range(thres + 1, block[component].stop)}
-
-                boom[target].append(right)
-                block = left
-                if final is not None:
-                    boom[final].append(block)
-
+    # Part1
     for part in parts:
         for block in boom["A"]:
             if all(part[c] in block[c] for c in components):
