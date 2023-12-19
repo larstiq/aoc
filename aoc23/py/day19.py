@@ -3,14 +3,6 @@
 from collections import Counter, defaultdict, deque
 from utils import examples, inputs
 
-import pandas as pd
-import scipy
-import numpy as np
-import networkx as nx
-import itertools
-import math
-from heapq import heappop, heappush
-
 
 def day19(filename):
     print()
@@ -19,74 +11,39 @@ def day19(filename):
     part1 = 0
     part2 = 0
 
-    data = []
-
-
-    accepted = []
-    rejected = []
-    workflows = {"A": lambda part: accepted.append(part),
-                "R": lambda part: rejected.append(part)
-                }
     workflows = {}
 
-    import portion
-    ranges = portion.IntervalDict()
-
-
     terms = Counter()
+    parts = []
     with open(filename) as puzzlein:
         for line in puzzlein:
             if line.strip() == "":
                 continue
-            if line[0] != '{':
+            if line[0] != "{":
                 workflow, rest = line.strip()[:-1].split("{")
                 wfls = rest.split(",")
                 workflows[workflow] = wfls[:-2] + [wfls[-2] + "," + wfls[-1]]
-                print(workflows[workflow])
                 terms[workflow] += 1
 
                 for instr in rest.split(","):
-                    if ':' in instr:
+                    if ":" in instr:
                         rule, target = instr.split(":")
                         terms[target] += 1
                     else:
                         terms[instr] += 1
 
             else:
-                continue
                 part = eval("dict(" + line.strip()[1:-1] + ")")
+                parts.append(part)
 
-                w = "in"
-                while w not in ("A", "R"):
-                    for instr in workflows[w]:
-                        rule, target = instr.split(":")
-
-                        assert rule[1] in ("<", ">")
-                        component, comp, thres = rule[0], rule[1], rule[2:]
-
-                        if comp == "<":
-                            if part[component] < int(thres):
-                                w = target
-                        else:
-                            if part[component] > int(thres):
-                                w = target
-
-                assert w in ("A", "R")
-                if w == "A":
-                    accepted.append(part)
-                else:
-                    rejected.append(part)
-
-    # Assumption, the instructions encode a tree, each instruction is only targeted once
+    # Assumption: the instructions encode a tree, each instruction is only targeted once
     # We can walk through the list of instructions refining the tree and then
     # pick the next unhandled leaf
-    for (term, freq) in terms.items():
+    for term, freq in terms.items():
         if freq > 2:
             assert term in ("R", "A")
 
     components = "xmsa"
-
-
     boom = defaultdict(list)
     boom["in"].append({component: range(1, 4000 + 1) for component in components})
     unhandled = set(workflows.keys())
@@ -125,7 +82,7 @@ def day19(filename):
                 discovered.add(target)
 
             if comp == "<":
-                left =  block | {component: range(block[component].start, thres)}
+                left = block | {component: range(block[component].start, thres)}
                 right = block | {component: range(thres, block[component].stop)}
 
                 boom[target].append(left)
@@ -134,7 +91,7 @@ def day19(filename):
                     boom[final].append(block)
 
             elif comp == ">":
-                left =  block | {component: range(block[component].start, thres + 1)}
+                left = block | {component: range(block[component].start, thres + 1)}
                 right = block | {component: range(thres + 1, block[component].stop)}
 
                 boom[target].append(right)
@@ -142,18 +99,26 @@ def day19(filename):
                 if final is not None:
                     boom[final].append(block)
 
+    for part in parts:
+        for block in boom["A"]:
+            if all(part[c] in block[c] for c in components):
+                part1 += sum(part.values())
 
-    part1 = sum(sum(part.values()) for part in accepted)
+    accepted = [
+        len(block["x"]) * len(block["a"]) * len(block["m"]) * len(block["s"])
+        for block in boom["A"]
+    ]
+    rejected = [
+        len(block["x"]) * len(block["a"]) * len(block["m"]) * len(block["s"])
+        for block in boom["R"]
+    ]
+    assert sum(accepted) + sum(rejected) == 4000**4
 
-    accepted = [len(block['x']) * len(block['a']) * len(block['m']) * len(block['s']) for block in boom['A']]
-    rejected = [len(block['x']) * len(block['a']) * len(block['m']) * len(block['s']) for block in boom['R']]
     part2 = sum(accepted)
     print("accepted:", sum(accepted))
     print("rejected:", sum(rejected))
-    print("hmm:", sum(accepted) + sum(rejected) - 4000**4)
     print("part1:", part1)
     print("part2:", part2)
-    breakpoint()
 
 
 day19(examples("19"))
