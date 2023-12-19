@@ -21,8 +21,7 @@ def day19(filename):
                 continue
             if line[0] != "{":
                 workflow, rest = line.strip()[:-1].split("{")
-                wfls = rest.split(",")
-                workflows[workflow] = wfls[:-2] + [wfls[-2] + "," + wfls[-1]]
+                workflows[workflow] = rest.split(",")
                 terms[workflow] += 1
 
                 for instr in rest.split(","):
@@ -48,28 +47,28 @@ def day19(filename):
     boom["in"].append({component: range(1, 4000 + 1) for component in components})
     discovered = set(["in"])
 
-    while discovered:
-        # Disjoint union, slow check but soit
+    while not discovered.issubset(set(["A", "R"])):
         node = discovered.pop()
+        if node in ("A", "R"): continue
 
         childer = boom[node]
         block = childer[0]
         for instruction in workflows[node]:
+
+            if ":" not in instruction:
+                boom[instruction].append(block)
+                childer.append(instruction)
+                discovered.add(instruction)
+                # Should be the end of the chain
+                continue
+
             rule, target = instruction.split(":")
             assert rule[1] in ("<", ">")
             component, comp, thres = rule[0], rule[1], rule[2:]
             thres = int(thres)
-            final = None
-
-            if "," in target:
-                target, final = target.split(",")
-                childer.append(final)
-                if final not in ("A", "R"):
-                    discovered.add(final)
 
             childer.append(target)
-            if target not in ("A", "R"):
-                discovered.add(target)
+            discovered.add(target)
 
             compare_larger = 1 * (comp == ">")
             left = block | {
@@ -81,8 +80,6 @@ def day19(filename):
 
             boom[target].append(righ if compare_larger else left)
             block = left if compare_larger else righ
-            if final is not None:
-                boom[final].append(block)
 
     # Part1
     for part in parts:
